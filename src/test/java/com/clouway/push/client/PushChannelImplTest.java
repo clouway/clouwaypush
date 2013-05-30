@@ -105,6 +105,41 @@ public class PushChannelImplTest {
     asyncAction.onFailure(new RuntimeException());
   }
 
+  @Test
+  public void unsubscribeFromEvent() {
+
+    final AsyncAction<Void> asyncAction = new AsyncAction<Void>();
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).unsubscribe(with(event), with(any(AsyncCallback.class)));
+      will(asyncAction);
+
+      oneOf(pushEventBus).removeHandlers(event);
+    }});
+
+    pushChannel.unsubscribe(event);
+    asyncAction.onSuccess(null);
+  }
+
+  @Test
+  public void retryUnsubscribingFromEvent() {
+
+    final AsyncAction<Void> asyncAction = new AsyncAction<Void>();
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).unsubscribe(with(event), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.unsubscribe(event);
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).unsubscribe(with(event), with(any(AsyncCallback.class)));
+    }});
+
+    asyncAction.onFailure(new RuntimeException());
+  }
+
   private class DummyEvent implements PushEvent {
 
     @Override

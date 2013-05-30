@@ -11,4 +11,6 @@ public interface PushChannelService extends RemoteService {
   String open();
 
   void subscribe(PushEvent event);
+
+  void unsubscribe(PushEvent event);
 }

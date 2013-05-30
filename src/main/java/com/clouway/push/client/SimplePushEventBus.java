@@ -16,4 +16,9 @@ public class SimplePushEventBus implements PushEventBus {
   public void addHandler(PushEvent event, PushEventHandler eventHandler) {
 
   }
+
+  @Override
+  public void removeHandlers(PushEvent event) {
+
+  }
 }

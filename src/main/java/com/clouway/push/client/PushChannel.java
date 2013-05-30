@@ -10,4 +10,6 @@ public interface PushChannel {
   void open();
 
   void subscribe(PushEvent event, PushEventHandler eventHandler);
+
+  void unsubscribe(PushEvent event);
 }

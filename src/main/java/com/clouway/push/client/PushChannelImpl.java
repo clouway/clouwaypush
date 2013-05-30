@@ -57,6 +57,22 @@ public class PushChannelImpl implements PushChannel {
     });
   }
 
+  @Override
+  public void unsubscribe(final PushEvent event) {
+
+    pushChannelServiceAsync.unsubscribe(event, new AsyncCallback<Void>() {
+      @Override
+      public void onFailure(Throwable caught) {
+        unsubscribe(event);
+      }
+
+      @Override
+      public void onSuccess(Void result) {
+        pushEventBus.removeHandlers(event);
+      }
+    });
+  }
+
   private native void openChannel(String channelToken, PushChannelImpl gwtPushChannel) /*-{
 
       var channel = new $wnd.goog.appengine.Channel(channelToken);

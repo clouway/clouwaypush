@@ -32,4 +32,10 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   public void subscribe(PushEvent event) {
     subscriptionsRepository.get().subscribe(subscriber.get().getName(), event.getEventName());
   }
+
+  @Override
+  public void unsubscribe(PushEvent event) {
+    // TODO: Should be implemented...
+    // TODO: Also when subscribing/unsubscribing it's better to pass the event...
+  }
 }
