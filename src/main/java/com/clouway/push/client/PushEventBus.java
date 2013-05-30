@@ -9,7 +9,9 @@ public interface PushEventBus {
 
   void fireEvent(PushEvent pushEvent);
 
-  <T extends PushEvent> void addHandler(T event, PushEventHandler<T> eventHandler);
+  void addHandler(PushEvent event, PushEventHandler eventHandler);
 
   void removeHandlers(PushEvent event);
+
+  void removeHandler(PushEvent event, PushEventHandler eventHandler);
 }
