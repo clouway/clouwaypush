@@ -1,7 +1,7 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
-import com.clouway.push.client.PushChannelService;
+import com.clouway.push.client.channelapi.PushChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.inject.Inject;
@@ -29,8 +29,8 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public void subscribe(PushEvent event) {
-    subscriptionsRepository.get().subscribe(subscriber.get().getName(), event.getEventName());
+  public void subscribe(PushEvent.SerializableType type) {
+    subscriptionsRepository.get().subscribe(subscriber.get().getName(), type);
   }
 
   @Override

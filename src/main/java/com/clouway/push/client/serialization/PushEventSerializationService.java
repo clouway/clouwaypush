@@ -1,4 +1,4 @@
-package com.clouway.push.client;
+package com.clouway.push.client.serialization;
 
 import com.clouway.push.shared.PushEvent;
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -15,8 +15,10 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  *
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-@RemoteServiceRelativePath("defaultService")
-public interface DefaultService extends RemoteService {
+@RemoteServiceRelativePath("pushEventSerializationService")
+public interface PushEventSerializationService extends RemoteService {
 
   PushEvent receiveEvent();
+
+  PushEvent.SerializableType receiveType();
 }

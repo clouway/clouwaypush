@@ -1,11 +1,24 @@
 package com.clouway.push.shared;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
+import com.google.web.bindery.event.shared.Event;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public interface PushEvent extends Serializable {
+public abstract class PushEvent<T extends PushEventHandler> extends Event<T> implements IsSerializable {
 
-  String getEventName();
+  protected PushEvent() {
+  }
+
+  @Override
+  public abstract SerializableType<T> getAssociatedType();
+
+  @Override
+  public abstract void dispatch(T handler);
+
+  public static class SerializableType<T> extends Event.Type<T> implements IsSerializable {
+    public SerializableType() {
+    }
+  }
 }

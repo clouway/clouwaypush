@@ -1,5 +1,7 @@
 package com.clouway.push.server;
 
+import com.clouway.push.shared.PushEvent;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  */
 public interface SubscriptionsRepository {
 
-  void subscribe(String subscriber, String eventName);
+  void subscribe(String subscriber, PushEvent.SerializableType type);
 
-  List<String> getSubscribedUsers(String eventName);
+  List<String> getSubscribedUsers(PushEvent.SerializableType type);
 }

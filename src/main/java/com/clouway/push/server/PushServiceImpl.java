@@ -38,7 +38,7 @@ public class PushServiceImpl implements PushService {
 
     String message = encodeMessage(event);
 
-    List<String> subscribedUsers = subscriptionsRepository.get().getSubscribedUsers(event.getEventName());
+    List<String> subscribedUsers = subscriptionsRepository.get().getSubscribedUsers(event.getAssociatedType());
 
     ChannelService channelService = ChannelServiceFactory.getChannelService();
 
@@ -51,7 +51,7 @@ public class PushServiceImpl implements PushService {
     try {
       return RPC.encodeResponseForSuccess(getDummyMethod(), event, getSerializationPolicy());
     } catch (SerializationException e) {
-      throw new RuntimeException("Unable to encode a message for push.\n" + event.getEventName(), e);
+      throw new RuntimeException("Unable to encode a message for push.\n" + event.getAssociatedType(), e);
     }
   }
 

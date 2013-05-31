@@ -5,7 +5,7 @@ import com.clouway.push.shared.PushEvent;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public interface PushEventHandler<T extends PushEvent> {
+public interface PushEventListener {
 
-  void onEvent(T event);
+  void onPushEvent(PushEvent event);
 }

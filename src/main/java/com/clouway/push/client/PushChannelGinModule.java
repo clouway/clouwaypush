@@ -1,5 +1,7 @@
 package com.clouway.push.client;
 
+import com.clouway.push.client.channelapi.PushChannelService;
+import com.clouway.push.client.channelapi.PushChannelServiceAsync;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.inject.client.AbstractGinModule;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
@@ -14,9 +16,8 @@ public class PushChannelGinModule extends AbstractGinModule {
   @Override
   protected void configure() {
 
-    bind(PushChannel.class).to(PushChannelImpl.class).in(Singleton.class);
-
-    bind(PushEventBus.class).to(SimplePushEventBus.class).in(Singleton.class);
+    bind(PushChannelApi.class).to(PushChannelApiImpl.class).in(Singleton.class);
+    bind(PushEventBus.class).to(ChannelApiPushEventBus.class).in(Singleton.class);
   }
 
   @Singleton
