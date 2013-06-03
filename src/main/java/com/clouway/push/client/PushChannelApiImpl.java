@@ -1,7 +1,6 @@
 package com.clouway.push.client;
 
 import com.clouway.push.client.channelapi.PushChannelServiceAsync;
-import com.clouway.push.client.serialization.PushEventSerializationServiceAsync;
 import com.clouway.push.shared.PushEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -15,16 +14,13 @@ import com.google.inject.Inject;
 public class PushChannelApiImpl implements PushChannelApi {
 
   private PushChannelServiceAsync pushChannelServiceAsync;
-  private PushEventSerializationServiceAsync pushEventSerializationServiceAsync;
 
   private boolean openedChannel = false;
   private PushEventListener listener;
 
   @Inject
-  public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync, PushEventSerializationServiceAsync pushEventSerializationServiceAsync) {
+  public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync) {
     this.pushChannelServiceAsync = pushChannelServiceAsync;
-    this.pushEventSerializationServiceAsync = pushEventSerializationServiceAsync;
-
   }
 
   @Override
@@ -64,7 +60,7 @@ public class PushChannelApiImpl implements PushChannelApi {
   private void onMessage(String json) {
 
     try {
-      SerializationStreamReader reader = ((SerializationStreamFactory) pushEventSerializationServiceAsync).createStreamReader(json);
+      SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
       PushEvent pushEvent = (PushEvent) reader.readObject();
       listener.onPushEvent(pushEvent);
     } catch (SerializationException e) {

@@ -37,4 +37,9 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   public void unsubscribe(PushEvent event) {
 
   }
+
+  @Override
+  public PushEvent dummyMethod() {
+    return null;
+  }
 }
