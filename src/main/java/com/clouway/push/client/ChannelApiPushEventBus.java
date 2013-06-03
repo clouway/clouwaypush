@@ -28,7 +28,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
   }
 
   @Override
-  public void addHandler(final PushEvent.SerializableType type, final PushEventHandler handler) {
+  public void addHandler(final PushEvent.Type type, final PushEventHandler handler) {
 
     if (!pushChannelApi.hasOpennedChannel()) {
 

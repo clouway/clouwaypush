@@ -11,6 +11,4 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface PushEventSerializationServiceAsync {
 
   void receiveEvent(AsyncCallback<PushEvent> async);
-
-  void receiveType(AsyncCallback<PushEvent.SerializableType> async);
 }

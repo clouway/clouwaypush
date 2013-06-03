@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface SubscriptionsRepository {
 
-  void subscribe(String subscriber, PushEvent.SerializableType type);
+  void subscribe(String subscriber, PushEvent.Type type);
 
-  List<String> getSubscribedUsers(PushEvent.SerializableType type);
+  List<String> getSubscribedUsers(PushEvent.Type type);
 }

@@ -73,7 +73,7 @@ public class PushChannelApiImpl implements PushChannelApi {
   }
 
   @Override
-  public void subscribe(PushEvent.SerializableType type, final AsyncSubscribeCallback callback) {
+  public void subscribe(PushEvent.Type type, final AsyncSubscribeCallback callback) {
 
     pushChannelServiceAsync.subscribe(type, new AsyncCallback<Void>() {
       @Override

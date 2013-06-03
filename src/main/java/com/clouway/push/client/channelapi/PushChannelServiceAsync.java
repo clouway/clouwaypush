@@ -10,7 +10,7 @@ public interface PushChannelServiceAsync {
 
   void open(AsyncCallback<String> async);
 
-  void subscribe(PushEvent.SerializableType type, AsyncCallback<Void> async);
+  void subscribe(PushEvent.Type type, AsyncCallback<Void> async);
 
   void unsubscribe(PushEvent event, AsyncCallback<Void> async);
 }

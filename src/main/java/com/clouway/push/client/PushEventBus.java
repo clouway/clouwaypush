@@ -8,10 +8,5 @@ import com.clouway.push.shared.PushEventHandler;
  */
 public interface PushEventBus {
 
-  void addHandler(final PushEvent.SerializableType type, final PushEventHandler handler);
-
-//  void removeHandlers(PushEvent event);
-
-//  void removeHandler(PushEvent event, PushEventHandler eventHandler);
-
+  void addHandler(final PushEvent.Type type, final PushEventHandler handler);
 }

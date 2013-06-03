@@ -19,6 +19,4 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface PushEventSerializationService extends RemoteService {
 
   PushEvent receiveEvent();
-
-  PushEvent.SerializableType receiveType();
 }

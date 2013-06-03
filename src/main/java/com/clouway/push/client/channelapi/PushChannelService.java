@@ -10,7 +10,7 @@ public interface PushChannelService extends RemoteService {
 
   String open();
 
-  void subscribe(PushEvent.SerializableType type);
+  void subscribe(PushEvent.Type type);
 
   void unsubscribe(PushEvent event);
 }
