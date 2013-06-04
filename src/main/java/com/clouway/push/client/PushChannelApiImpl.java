@@ -1,5 +1,7 @@
 package com.clouway.push.client;
 
+import com.clouway.push.client.channelapi.Channel;
+import com.clouway.push.client.channelapi.ChannelListener;
 import com.clouway.push.client.channelapi.PushChannelServiceAsync;
 import com.clouway.push.shared.PushEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -13,59 +15,58 @@ import com.google.inject.Inject;
  */
 public class PushChannelApiImpl implements PushChannelApi {
 
-  private PushChannelServiceAsync pushChannelServiceAsync;
+  private final PushChannelServiceAsync pushChannelServiceAsync;
+  private final Channel channel;
 
   private boolean openedChannel = false;
   private PushEventListener listener;
 
   @Inject
-  public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync) {
+  public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync, Channel channel) {
     this.pushChannelServiceAsync = pushChannelServiceAsync;
+    this.channel = channel;
   }
 
   @Override
-  public boolean hasOpennedChannel() {
+  public boolean hasOpenedChannel() {
     return openedChannel;
   }
 
   @Override
-  public void connect() {
+  public void openChannel() {
 
-    pushChannelServiceAsync.open(new AsyncCallback<String>() {
+    pushChannelServiceAsync.openChannel(new AsyncCallback<String>() {
 
       @Override
       public void onFailure(Throwable throwable) {
-        connect();
+        openChannel();
       }
 
       @Override
       public void onSuccess(String channelToken) {
-        openChannel(channelToken, PushChannelApiImpl.this);
+
+        channel.open(channelToken, new ChannelListener() {
+
+          @Override
+          public void onMessage(String json) {
+            try {
+              SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
+              PushEvent pushEvent = (PushEvent) reader.readObject();
+              listener.onPushEvent(pushEvent);
+            } catch (SerializationException e) {
+              throw new RuntimeException("Unable to deserialize " + json, e);
+            }
+          }
+
+          @Override
+          public void onTokenExpire() {
+            openChannel();
+          }
+        });
+
         openedChannel = true;
       }
     });
-  }
-
-  private native void openChannel(String channelToken, PushChannelApiImpl pushChannelApi) /*-{
-
-      var channel = new $wnd.goog.appengine.Channel(channelToken);
-      var socket = channel.open();
-
-      socket.onmessage = function (event) {
-          pushChannelApi.@com.clouway.push.client.PushChannelApiImpl::onMessage(Ljava/lang/String;)(event.data);
-      }
-
-  }-*/;
-
-  private void onMessage(String json) {
-
-    try {
-      SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
-      PushEvent pushEvent = (PushEvent) reader.readObject();
-      listener.onPushEvent(pushEvent);
-    } catch (SerializationException e) {
-      throw new RuntimeException("Unable to deserialize " + json, e);
-    }
   }
 
   @Override
@@ -85,7 +86,6 @@ public class PushChannelApiImpl implements PushChannelApi {
 
   @Override
   public void addPushEventListener(PushEventListener listener) {
-
     this.listener = listener;
   }
 }

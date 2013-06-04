@@ -7,9 +7,9 @@ import com.clouway.push.shared.PushEvent;
  */
 public interface PushChannelApi {
 
-  boolean hasOpennedChannel();
+  boolean hasOpenedChannel();
 
-  void connect();
+  void openChannel();
 
   void subscribe(PushEvent.Type type, AsyncSubscribeCallback callback);
 

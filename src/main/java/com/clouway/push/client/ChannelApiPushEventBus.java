@@ -10,11 +10,12 @@ import com.google.inject.Inject;
  */
 public class ChannelApiPushEventBus implements PushEventBus {
 
-  private EventBus eventBus;
-  private PushChannelApi pushChannelApi;
+  private final EventBus eventBus;
+  private final PushChannelApi pushChannelApi;
 
   @Inject
   public ChannelApiPushEventBus(final EventBus eventBus, PushChannelApi pushChannelApi) {
+
     this.eventBus = eventBus;
     this.pushChannelApi = pushChannelApi;
 
@@ -30,9 +31,8 @@ public class ChannelApiPushEventBus implements PushEventBus {
   @Override
   public void addHandler(final PushEvent.Type type, final PushEventHandler handler) {
 
-    if (!pushChannelApi.hasOpennedChannel()) {
-
-        pushChannelApi.connect();
+    if (!pushChannelApi.hasOpenedChannel()) {
+        pushChannelApi.openChannel();
     }
 
     pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
@@ -42,7 +42,5 @@ public class ChannelApiPushEventBus implements PushEventBus {
         eventBus.addHandler(type,handler);
       }
     });
-
-
   }
 }

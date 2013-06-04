@@ -24,7 +24,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public String open() {
+  public String openChannel() {
     return ChannelServiceFactory.getChannelService().createChannel(subscriber.get().getName());
   }
 

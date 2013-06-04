@@ -8,7 +8,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
  */
 public interface PushChannelService extends RemoteService {
 
-  String open();
+  String openChannel();
 
   void subscribe(PushEvent.Type type);
 
