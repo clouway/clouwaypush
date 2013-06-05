@@ -1,9 +1,6 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
-import com.google.appengine.api.channel.ChannelMessage;
-import com.google.appengine.api.channel.ChannelService;
-import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
@@ -36,15 +33,16 @@ public class PushServiceImpl implements PushService {
 
   public void pushEvent(PushEvent event) {
 
-    String message = encodeMessage(event);
+    // TODO: Should be implemented
+    //String message = encodeMessage(event);
 
-    List<String> subscribedUsers = subscriptionsRepository.get().getSubscribedUsers(event.getAssociatedType());
+    //List<String> subscribedUsers = subscriptionsRepository.get().getSubscribedUsers(event.getAssociatedType());
 
-    ChannelService channelService = ChannelServiceFactory.getChannelService();
+    //ChannelService channelService = ChannelServiceFactory.getChannelService();
 
-    for (String subscribedUser : subscribedUsers) {
-      channelService.sendMessage(new ChannelMessage(subscribedUser, message));
-    }
+    //for (String subscribedUser : subscribedUsers) {
+    //  channelService.sendMessage(new ChannelMessage(subscribedUser, message));
+    //}
   }
 
   private String encodeMessage(PushEvent event) {

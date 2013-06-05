@@ -18,8 +18,11 @@ public abstract class PushEvent<T extends PushEventHandler> extends Event<T> imp
   @Override
   public abstract void dispatch(T handler);
 
-  public static class Type<T> extends Event.Type<T> implements Serializable {
+  public abstract static class Type<T> extends Event.Type<T> implements Serializable {
+
     public Type() {
     }
+
+    public abstract String getEventName();
   }
 }

@@ -12,7 +12,7 @@ public interface PushChannelService extends RemoteService {
 
   void subscribe(PushEvent.Type type);
 
-  void unsubscribe(PushEvent event);
+  void unsubscribe(PushEvent.Type event);
 
   PushEvent dummyMethod();
 }

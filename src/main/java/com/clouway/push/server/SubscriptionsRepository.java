@@ -2,14 +2,16 @@ package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
 
-import java.util.List;
-
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
 public interface SubscriptionsRepository {
 
-  void subscribe(String subscriber, PushEvent.Type type);
+  boolean hasSubscription(PushEvent.Type eventType, String subscriber);
 
-  List<String> getSubscribedUsers(PushEvent.Type type);
+  void put(Subscription subscription);
+
+  Subscription get(PushEvent.Type eventType, String subscriber);
+
+  void removeSubscription(PushEvent.Type eventType, String subscriber);
 }

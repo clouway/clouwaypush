@@ -1,6 +1,8 @@
 package com.clouway.push.server;
 
+import com.google.appengine.repackaged.org.joda.time.DateTime;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
@@ -30,5 +32,9 @@ public class PushChannelModule extends AbstractModule {
     });
   }
 
-
+  @Provides
+  @CurrentDateAndTime
+  DateTime getCurrentDateAndTime() {
+    return DateTime.now();
+  }
 }

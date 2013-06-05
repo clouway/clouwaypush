@@ -41,7 +41,7 @@ public class PushChannelApiImplTest {
   public void openNewChannel() {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();
-    final InstanceMatcher<ChannelListener> channelListener = new InstanceMatcher<ChannelListener>();
+    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
@@ -60,7 +60,7 @@ public class PushChannelApiImplTest {
   public void reopenChannelWhenTokenExpires() {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();
-    final InstanceMatcher<ChannelListener> channelListener = new InstanceMatcher<ChannelListener>();
+    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
@@ -73,7 +73,7 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess("channelToken");
 
     final AsyncAction<String> anotherAsyncAction = new AsyncAction<String>();
-    final InstanceMatcher<ChannelListener> anotherChannelListener = new InstanceMatcher<ChannelListener>();
+    final InstanceCapture<ChannelListener> anotherChannelListener = new InstanceCapture<ChannelListener>();
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
@@ -82,7 +82,7 @@ public class PushChannelApiImplTest {
       oneOf(channel).open(with("newChannelToken"), with(anotherChannelListener));
     }});
 
-    channelListener.getInstance().onTokenExpire();
+    channelListener.getValue().onTokenExpire();
     anotherAsyncAction.onSuccess("newChannelToken");
   }
 
@@ -91,7 +91,7 @@ public class PushChannelApiImplTest {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();
     final AsyncAction<String> retryAction = new AsyncAction<String>();
-    final InstanceMatcher<ChannelListener> channelListener = new InstanceMatcher<ChannelListener>();
+    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
@@ -154,7 +154,12 @@ public class PushChannelApiImplTest {
 
   private class SimpleEvent extends PushEvent<SimpleEventHandler> {
 
-    public Type<SimpleEventHandler> TYPE = new Type<SimpleEventHandler>();
+    public Type<SimpleEventHandler> TYPE = new Type<SimpleEventHandler>() {
+      @Override
+      public String getEventName() {
+        return "SimpleEvent";
+      }
+    };
 
     @Override
     public Type<SimpleEventHandler> getAssociatedType() {
