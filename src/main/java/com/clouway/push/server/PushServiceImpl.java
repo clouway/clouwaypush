@@ -1,12 +1,14 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
+import com.google.appengine.api.channel.ChannelMessage;
+import com.google.appengine.api.channel.ChannelService;
+import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import java.io.BufferedInputStream;
@@ -22,27 +24,25 @@ import java.util.List;
  */
 public class PushServiceImpl implements PushService {
 
-  private final Provider<SubscriptionsRepository> subscriptionsRepository;
+  private ActiveSubscriptionsFilter filter;
   private final String serializationPolicyDirectory;
 
   @Inject
-  public PushServiceImpl(Provider<SubscriptionsRepository> subscriptionsRepository, @Named("SerializationPolicyDirectory") String serializationPolicyDirectory) {
-    this.subscriptionsRepository = subscriptionsRepository;
+  public PushServiceImpl(ActiveSubscriptionsFilter filter, @Named("SerializationPolicyDirectory") String serializationPolicyDirectory) {
+    this.filter = filter;
     this.serializationPolicyDirectory = serializationPolicyDirectory;
   }
 
   public void pushEvent(PushEvent event) {
 
-    // TODO: Should be implemented
-    //String message = encodeMessage(event);
+    String message = encodeMessage(event);
 
-    //List<String> subscribedUsers = subscriptionsRepository.get().getSubscribedUsers(event.getAssociatedType());
+    List<Subscription> subscriptions = filter.filterSubscriptions(event.getAssociatedType());
 
-    //ChannelService channelService = ChannelServiceFactory.getChannelService();
-
-    //for (String subscribedUser : subscribedUsers) {
-    //  channelService.sendMessage(new ChannelMessage(subscribedUser, message));
-    //}
+    ChannelService channelService = ChannelServiceFactory.getChannelService();
+    for (Subscription subscription : subscriptions) {
+      channelService.sendMessage(new ChannelMessage(subscription.getSubscriber(), message));
+    }
   }
 
   private String encodeMessage(PushEvent event) {

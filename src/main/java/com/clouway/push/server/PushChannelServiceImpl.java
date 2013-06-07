@@ -2,12 +2,15 @@ package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.client.channelapi.PushChannelService;
+import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.channel.ChannelServiceFactory;
-import com.google.appengine.repackaged.org.joda.time.DateTime;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import java.util.List;
+import java.util.logging.Logger;
 
 import static com.clouway.push.server.Subscription.aNewSubscription;
 
@@ -16,70 +19,96 @@ import static com.clouway.push.server.Subscription.aNewSubscription;
  */
 @Singleton
 public class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
-
-  private final Provider<SubscriptionsRepository> subscriptionsRepository;
-  private final Provider<Subscriber> subscriber;
-  private final Provider<DateTime> currentDateAndTime;
+  Logger log = Logger.getLogger(this.getClass().getSimpleName());
+  private final SubscriptionsRepository subscriptionsRepository;
+  private final Provider<DateTime> currentDate;
 
   @Inject
-  public PushChannelServiceImpl(Provider<SubscriptionsRepository> subscriptionsRepository, Provider<Subscriber> subscriber, Provider<DateTime> currentDateAndTime) {
-    this.subscriptionsRepository = subscriptionsRepository;
-    this.subscriber = subscriber;
-    this.currentDateAndTime = currentDateAndTime;
+  public PushChannelServiceImpl(Provider<SubscriptionsRepository> subscriptionsRepository,
+
+                                @CurrentDateAndTime Provider<DateTime> currentDate) {
+    this.subscriptionsRepository = subscriptionsRepository.get();
+    this.currentDate = currentDate;
   }
 
   @Override
-  public String openChannel() {
-    return ChannelServiceFactory.getChannelService().createChannel(subscriber.get().getName());
+  public String openChannel(String subscriber) {
+
+    log.info("Open channel for user: " + subscriber);
+
+    return ChannelServiceFactory.getChannelService().createChannel(subscriber);
   }
 
   @Override
-  public void subscribe(PushEvent.Type eventType) {
+  public void subscribe(String subscriber, PushEvent.Type eventType) {
 
-    String subscriberName = subscriber.get().getName();
+//    String subscriberName = subscriber;
 
-    if (!subscriptionsRepository.get().hasSubscription(eventType, subscriberName)) {
+    log.info("subscribe me for event " + eventType.getEventName() + "   user : "+ subscriber);
 
-      Subscription subscription = aNewSubscription().eventName(eventType.getEventName())
-                                                    .subscriber(subscriberName)
-                                                    .expirationDateAndTime(currentDateAndTime.get().plusMinutes(5)).build();
+//    if (!subscriptionsRepository.get().hasSubscription(eventType, subscriberName)) {
 
-      int timesSubscribed = subscription.getTimesSubscribed() + 1;
-      subscription.setTimesSubscribed(timesSubscribed);
+    Subscription subscription = aNewSubscription().eventName(eventType.getEventName())
+            .eventType(eventType)
+            .subscriber(subscriber)
+            .expirationDateAndTime(currentDate.get().plusMills(31 * 1000)).build();
 
-      subscriptionsRepository.get().put(subscription);
+//      int timesSubscribed = subscription.getTimesSubscribed() + 1;
+//      subscription.setTimesSubscribed(timesSubscribed);
 
-    } else {
+    subscriptionsRepository.put(subscription);
 
-      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
-      subscription.setExpirationDateAndTime(currentDateAndTime.get().plusMinutes(5));
+//    } else {
+//
+//      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
+//      subscription.setExpirationDate(currentDate.get().plusMinutes(5));
 
-      int timesSubscribed = subscription.getTimesSubscribed() + 1;
-      subscription.setTimesSubscribed(timesSubscribed);
+//      int timesSubscribed = subscription.getTimesSubscribed() + 1;
+//      subscription.setTimesSubscribed(timesSubscribed);
 
-      subscriptionsRepository.get().put(subscription);
+//      subscriptionsRepository.get().put(subscription);
+//    }
+  }
+
+  @Override
+  public void unsubscribe(String subscriber,PushEvent.Type eventType) {
+
+
+    log.info("Unsubscribe... user: " + subscriber);
+//    String subscriberName = this.subscriber.get().getName();
+
+    if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
+
+//      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
+
+//      int timesSubscribed = subscription.getTimesSubscribed() - 1;
+//      subscription.setTimesSubscribed(timesSubscribed);
+
+
+//      if (subscription.getTimesSubscribed() == 0) {
+      subscriptionsRepository.removeSubscription(eventType, subscriber);
+//      } else {
+//        subscription.setExpirationDate(currentDate.get().plusMinutes(5));
+//        subscriptionsRepository.get().put(subscription);
+//      }
     }
   }
 
   @Override
-  public void unsubscribe(PushEvent.Type eventType) {
+  public void iAmAlive(String subscriber, int seconds) {
 
-    String subscriberName = this.subscriber.get().getName();
+    log.info("Im alive... user: " + subscriber + "   time: " + seconds);
 
-    if (subscriptionsRepository.get().hasSubscription(eventType, subscriberName)) {
-
-      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
-
-      int timesSubscribed = subscription.getTimesSubscribed() - 1;
-      subscription.setTimesSubscribed(timesSubscribed);
-
-      if (subscription.getTimesSubscribed() == 0) {
-        subscriptionsRepository.get().removeSubscription(eventType, subscriberName);
-      } else {
-        subscription.setExpirationDateAndTime(currentDateAndTime.get().plusMinutes(5));
-        subscriptionsRepository.get().put(subscription);
-      }
+    List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
+    for (Subscription subscription : subscriptions) {
+      subscription.renewingTillDate(currentDate.get().plusMills(seconds*1000));
+      subscriptionsRepository.put(subscription);
     }
+  }
+
+  @Override
+  public void removeSubscriptions(String subscriber) {
+    subscriptionsRepository.removeAllSubscriptions(subscriber);
   }
 
   @Override

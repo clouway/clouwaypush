@@ -4,6 +4,7 @@ import com.clouway.push.client.channelapi.Channel;
 import com.clouway.push.client.channelapi.ChannelImpl;
 import com.clouway.push.client.channelapi.PushChannelService;
 import com.clouway.push.client.channelapi.PushChannelServiceAsync;
+import com.clouway.push.client.subscriber.Subscriber;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
@@ -34,5 +35,16 @@ public class PushChannelGinModule extends AbstractGinModule {
     ((ServiceDefTarget) pushChannelServiceAsync).setServiceEntryPoint("/pushChannelService");
 
     return pushChannelServiceAsync;
+  }
+
+  @Provides
+  public ImAliveTimer getImAliveTimer() {
+    return new ImAliveTimerImpl(30);
+  }
+
+  @Provides
+  @CurrentSubscriber
+  public String getCurrentSubscriber() {
+    return Subscriber.getValue();
   }
 }

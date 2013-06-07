@@ -1,5 +1,6 @@
 package com.clouway.push.client;
 
+import com.clouway.push.client.channelapi.AsyncUnsubscribeCallBack;
 import com.clouway.push.shared.PushEvent;
 
 /**
@@ -9,9 +10,11 @@ public interface PushChannelApi {
 
   boolean hasOpenedChannel();
 
-  void openChannel();
+  void connect();
 
   void subscribe(PushEvent.Type type, AsyncSubscribeCallback callback);
 
   void addPushEventListener(PushEventListener listener);
+
+  void unsubscribe(PushEvent.Type type, AsyncUnsubscribeCallBack callBack);
 }

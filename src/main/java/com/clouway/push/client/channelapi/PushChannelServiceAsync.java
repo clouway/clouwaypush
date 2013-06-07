@@ -8,11 +8,15 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public interface PushChannelServiceAsync {
 
-  void openChannel(AsyncCallback<String> async);
+  void openChannel(String subscriber, AsyncCallback<String> async);
 
-  void subscribe(PushEvent.Type type, AsyncCallback<Void> async);
+  void subscribe(String subscriber, PushEvent.Type type, AsyncCallback<Void> async);
 
-  void unsubscribe(PushEvent event, AsyncCallback<Void> async);
+  void unsubscribe(String subscriber, PushEvent.Type event, AsyncCallback<Void> async);
 
   void dummyMethod(AsyncCallback<PushEvent> async);
+
+  void iAmAlive(String subscriber, int seconds, AsyncCallback<Void> async);
+
+  void removeSubscriptions(String subscriber, AsyncCallback<Void> asyncCallback);
 }

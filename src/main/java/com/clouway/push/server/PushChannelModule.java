@@ -1,6 +1,6 @@
 package com.clouway.push.server;
 
-import com.google.appengine.repackaged.org.joda.time.DateTime;
+import com.clouway.push.shared.util.DateTime;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -23,6 +23,7 @@ public class PushChannelModule extends AbstractModule {
 
     bind(PushService.class).to(PushServiceImpl.class).in(Singleton.class);
     bind(String.class).annotatedWith(Names.named("SerializationPolicyDirectory")).toInstance(serializationPolicyDirectory);
+    bind(SubscriptionsRepository.class).to(MemcachSubscriptionsRepository.class);
 
     install(new ServletModule(){
       @Override
@@ -35,6 +36,6 @@ public class PushChannelModule extends AbstractModule {
   @Provides
   @CurrentDateAndTime
   DateTime getCurrentDateAndTime() {
-    return DateTime.now();
+    return new DateTime();
   }
 }
