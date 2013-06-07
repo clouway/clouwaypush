@@ -10,5 +10,6 @@ import java.util.List;
  */
 @ImplementedBy(ActiveSubscriptionsFilterImpl.class  )
 public interface ActiveSubscriptionsFilter {
+
   List<Subscription> filterSubscriptions(PushEvent.Type type);
 }

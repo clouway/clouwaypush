@@ -56,7 +56,6 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
         openChannel();
       }
     });
-
   }
 
   public void openChannel() {
@@ -102,13 +101,12 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
       @Override
       public void onFailure(Throwable caught) {
-        GWT.log("subscription failed");
-        subscribe(type, callback);
+        GWT.log("Subscription of user: " + subscriber.get() + " for event: " + type.getEventName() + " has failed.");
       }
 
       @Override
       public void onSuccess(Void result) {
-        GWT.log("subscription success");
+        GWT.log("Successfully subscribed user: " + subscriber.get() + " for event: " + type.getEventName());
         callback.onSuccess();
       }
     });
@@ -121,11 +119,11 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
   @Override
   public void unsubscribe(final PushEvent.Type type, final AsyncUnsubscribeCallBack callBack) {
+
     pushChannelServiceAsync.unsubscribe(subscriber.get(), type, new AsyncCallback<Void>() {
 
       @Override
       public void onFailure(Throwable caught) {
-//        unsubscribe(type, callback);
       }
 
       @Override
@@ -133,23 +131,20 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
         callBack.onSuccess();
       }
     });
-
   }
 
   @Override
   public void onTime() {
-//    int seconds = 5 * 60;
+
     pushChannelServiceAsync.iAmAlive(subscriber.get(), timer.getSeconds() + 1, new AsyncCallback<Void>() {
+
       @Override
       public void onFailure(Throwable caught) {
-
       }
 
       @Override
       public void onSuccess(Void result) {
-
       }
     });
-    timer.schedule();
   }
 }

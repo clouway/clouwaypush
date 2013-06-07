@@ -54,7 +54,6 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
     syncCache.put("subscriber_" + subscriber, subscriptions);
   }
 
-
   @Override
   public Subscription get(PushEvent.Type eventType, String subscriber) {
     Map<String, Subscription> subscriptions = findSubscriptionsMap(subscriber);
@@ -75,7 +74,6 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
       subscriptions.remove(subscriber);
       putSubscriptions(eventType, subscriptions);
     }
-
   }
 
   @Override
@@ -87,7 +85,6 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
 
     return Lists.newArrayList();
   }
-
 
   public Map<String, Subscription> findSubscriptionsMap(String subscriber) {
     return (Map<String, Subscription>) syncCache.get("subscriber_" + subscriber);
@@ -102,7 +99,6 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
 
     return Lists.newArrayList();
   }
-
 
   public Map<String, Subscription> findSubscriptionsMap(PushEvent.Type type) {
     return (Map<String, Subscription>) syncCache.get("eventType_" + type.getEventName());
@@ -126,6 +122,5 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
     }
 
     putSubscriptions(subscriber, null);
-
   }
 }

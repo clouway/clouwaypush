@@ -27,9 +27,4 @@ public class ImAliveTimerImpl implements ImAliveTimer {
   public int getSeconds() {
     return seconds;
   }
-
-  @Override
-  public void schedule() {
-    //timer.schedule(seconds *1000);
-  }
 }

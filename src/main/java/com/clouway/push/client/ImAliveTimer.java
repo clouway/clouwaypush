@@ -8,6 +8,4 @@ public interface ImAliveTimer {
   void onTime(OnTimeCallBack callBack);
 
   int getSeconds();
-
-  void schedule();
 }

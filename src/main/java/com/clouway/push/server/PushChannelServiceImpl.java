@@ -19,13 +19,13 @@ import static com.clouway.push.server.Subscription.aNewSubscription;
  */
 @Singleton
 public class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
+
   Logger log = Logger.getLogger(this.getClass().getSimpleName());
   private final SubscriptionsRepository subscriptionsRepository;
   private final Provider<DateTime> currentDate;
 
   @Inject
   public PushChannelServiceImpl(Provider<SubscriptionsRepository> subscriptionsRepository,
-
                                 @CurrentDateAndTime Provider<DateTime> currentDate) {
     this.subscriptionsRepository = subscriptionsRepository.get();
     this.currentDate = currentDate;
@@ -42,55 +42,24 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   @Override
   public void subscribe(String subscriber, PushEvent.Type eventType) {
 
-//    String subscriberName = subscriber;
-
     log.info("subscribe me for event " + eventType.getEventName() + "   user : "+ subscriber);
 
-//    if (!subscriptionsRepository.get().hasSubscription(eventType, subscriberName)) {
-
     Subscription subscription = aNewSubscription().eventName(eventType.getEventName())
-            .eventType(eventType)
-            .subscriber(subscriber)
-            .expirationDateAndTime(currentDate.get().plusMills(31 * 1000)).build();
-
-//      int timesSubscribed = subscription.getTimesSubscribed() + 1;
-//      subscription.setTimesSubscribed(timesSubscribed);
+                                                  .eventType(eventType)
+                                                  .subscriber(subscriber)
+                                                  .expirationDateAndTime(currentDate.get().plusMills(31 * 1000))
+                                                  .build();
 
     subscriptionsRepository.put(subscription);
-
-//    } else {
-//
-//      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
-//      subscription.setExpirationDate(currentDate.get().plusMinutes(5));
-
-//      int timesSubscribed = subscription.getTimesSubscribed() + 1;
-//      subscription.setTimesSubscribed(timesSubscribed);
-
-//      subscriptionsRepository.get().put(subscription);
-//    }
   }
 
   @Override
   public void unsubscribe(String subscriber,PushEvent.Type eventType) {
 
-
     log.info("Unsubscribe... user: " + subscriber);
-//    String subscriberName = this.subscriber.get().getName();
 
     if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
-
-//      Subscription subscription = subscriptionsRepository.get().get(eventType, subscriberName);
-
-//      int timesSubscribed = subscription.getTimesSubscribed() - 1;
-//      subscription.setTimesSubscribed(timesSubscribed);
-
-
-//      if (subscription.getTimesSubscribed() == 0) {
       subscriptionsRepository.removeSubscription(eventType, subscriber);
-//      } else {
-//        subscription.setExpirationDate(currentDate.get().plusMinutes(5));
-//        subscriptionsRepository.get().put(subscription);
-//      }
     }
   }
 
