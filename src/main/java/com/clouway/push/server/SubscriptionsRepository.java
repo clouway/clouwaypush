@@ -13,15 +13,13 @@ public interface SubscriptionsRepository {
 
   void put(Subscription subscription);
 
-  Subscription get(PushEvent.Type eventType, String subscriber);
-
   void removeSubscription(PushEvent.Type eventType, String subscriber);
 
-  List<Subscription> findSubscriptions(String name);
+  List<Subscription> findSubscriptions(String subscriber);
 
   List<Subscription> findSubscriptions(PushEvent.Type type);
 
   void removeSubscription(Subscription subscription);
 
-  void removeAllSubscriptions(String name);
+  void removeAllSubscriptions(String subscriber);
 }

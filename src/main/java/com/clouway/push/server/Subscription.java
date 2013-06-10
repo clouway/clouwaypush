@@ -15,10 +15,7 @@ public class Subscription implements Serializable {
   }
 
   public boolean isActive(DateTime dateTime) {
-    if (dateTime.isBefore(expirationDate)) {
-      return true;
-    }
-    return false;
+    return dateTime.isBefore(expirationDate);
   }
 
   public PushEvent.Type getEventType() {
@@ -43,6 +40,7 @@ public class Subscription implements Serializable {
 
     public Builder eventType(PushEvent.Type type) {
       this.type = type;
+      eventName = type.getEventName();
       return this;
     }
 
