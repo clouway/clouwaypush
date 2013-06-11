@@ -21,7 +21,7 @@ public class ImAliveTimerImpl implements ImAliveTimer {
          callBack.onTime();
       }
     };
-    timer.scheduleRepeating(seconds *1000);
+    timer.scheduleRepeating(seconds * 1000);
   }
 
   public int getSeconds() {

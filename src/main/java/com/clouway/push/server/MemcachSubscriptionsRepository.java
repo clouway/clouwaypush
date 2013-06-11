@@ -34,30 +34,35 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
   @Override
   public void put(Subscription subscription) {
 
-    Map<String, Subscription> subscriptionsMap = fetchSubscriptions(subscription.getSubscriber());
+    storeAndUpdateSubscriberSubscriptions(subscription);
 
-    if (subscriptionsMap != null) {
-      if (!subscriptionsMap.containsKey(subscription.getEventName())) {
-        subscriptionsMap.put(subscription.getEventName(), subscription);
-      }
+    storeAndUpdateEventSubscriptions(subscription);
+  }
+
+  private void storeAndUpdateSubscriberSubscriptions(Subscription subscription) {
+
+    Map<String, Subscription> subscriberSubscriptions = fetchSubscriptions(subscription.getSubscriber());
+
+    if (subscriberSubscriptions != null) {
+      subscriberSubscriptions.put(subscription.getEventName(), subscription);
     } else {
-      subscriptionsMap = Maps.newHashMap();
-      subscriptionsMap.put(subscription.getEventName(), subscription);
+      subscriberSubscriptions = Maps.newHashMap();
+      subscriberSubscriptions.put(subscription.getEventName(), subscription);
     }
 
-    storeSubscriptions(subscription.getSubscriber(), subscriptionsMap);
+    storeSubscriptions(subscription.getSubscriber(), subscriberSubscriptions);
+  }
 
-    subscriptionsMap = fetchSubscriptions(subscription.getEventType());
-    if (subscriptionsMap != null) {
-      if (!subscriptionsMap.containsKey(subscription.getSubscriber())) {
-        subscriptionsMap.put(subscription.getSubscriber(), subscription);
-      }
+  private void storeAndUpdateEventSubscriptions(Subscription subscription) {
+
+    Map<String, Subscription> eventSubscriptions = fetchSubscriptions(subscription.getEventType());
+    if (eventSubscriptions != null) {
+      eventSubscriptions.put(subscription.getSubscriber(), subscription);
     } else {
-      subscriptionsMap = Maps.newHashMap();
-      subscriptionsMap.put(subscription.getSubscriber(), subscription);
+      eventSubscriptions = Maps.newHashMap();
+      eventSubscriptions.put(subscription.getSubscriber(), subscription);
     }
-
-    storeSubscriptions(subscription.getEventType(), subscriptionsMap);
+    storeSubscriptions(subscription.getEventType(), eventSubscriptions);
   }
 
   @Override

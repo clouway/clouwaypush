@@ -1,6 +1,8 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.util.DateTime;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -37,5 +39,10 @@ public class PushChannelModule extends AbstractModule {
   @CurrentDateAndTime
   DateTime getCurrentDateAndTime() {
     return new DateTime();
+  }
+
+  @Provides
+  MemcacheService getMemcacheService() {
+    return MemcacheServiceFactory.getMemcacheService();
   }
 }

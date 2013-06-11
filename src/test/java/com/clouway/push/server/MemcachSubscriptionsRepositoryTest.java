@@ -2,6 +2,7 @@ package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
+import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.tools.development.testing.LocalMemcacheServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
@@ -100,8 +101,8 @@ public class MemcachSubscriptionsRepositoryTest {
   public void findSubscribersForEvent() throws Exception {
 
     storeSubscriptions(subscription, anotherSubscription,
-                       aNewSubscription().eventType(SimpleEvent.TYPE).subscriber("peter@gmail.com").build(),
-                       aNewSubscription().eventType(AnotherEvent.TYPE).subscriber("peter@gmail.com").build());
+            aNewSubscription().eventType(SimpleEvent.TYPE).subscriber("peter@gmail.com").build(),
+            aNewSubscription().eventType(AnotherEvent.TYPE).subscriber("peter@gmail.com").build());
 
     List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
 
@@ -128,8 +129,8 @@ public class MemcachSubscriptionsRepositoryTest {
   public void removeAllSubscriptionsForSubscriber() throws Exception {
 
     storeSubscriptions(subscription, anotherSubscription,
-                       aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).build(),
-                       aNewSubscription().subscriber("peter@gmail.com").eventType(AnotherEvent.TYPE).build());
+            aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).build(),
+            aNewSubscription().subscriber("peter@gmail.com").eventType(AnotherEvent.TYPE).build());
 
     repository.removeAllSubscriptions(subscriber);
 
@@ -211,6 +212,21 @@ public class MemcachSubscriptionsRepositoryTest {
 
     assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
     assertFalse(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
+  }
+
+  @Test
+  public void updateSubscriptionsExpirationDateWhenStored() {
+
+    subscription.setExpirationDate(new DateTime());
+    storeSubscriptions(subscription);
+
+    DateTime newDate = new DateTime().plusMinutes(1);
+    subscription.setExpirationDate(newDate);
+
+    storeSubscriptions(subscription);
+
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.get(0).getExpirationDate(), is(equalTo(newDate)));
   }
 
   private void storeSubscriptions(Subscription... subscriptions) {

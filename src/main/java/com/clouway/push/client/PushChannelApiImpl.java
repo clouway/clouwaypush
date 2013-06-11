@@ -136,7 +136,7 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
   @Override
   public void onTime() {
 
-    pushChannelServiceAsync.iAmAlive(subscriber.get(), timer.getSeconds() + 1, new AsyncCallback<Void>() {
+    pushChannelServiceAsync.iAmAlive(subscriber.get(), timer.getSeconds() + timer.getSeconds(), new AsyncCallback<Void>() {
 
       @Override
       public void onFailure(Throwable caught) {

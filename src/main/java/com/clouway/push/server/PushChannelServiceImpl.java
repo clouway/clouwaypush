@@ -47,7 +47,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
     Subscription subscription = aNewSubscription().eventName(eventType.getEventName())
                                                   .eventType(eventType)
                                                   .subscriber(subscriber)
-                                                  .expirationDateAndTime(currentDate.get().plusMills(31 * 1000))
+                                                  .expirationDateAndTime(currentDate.get().plusMills(60 * 1000))
                                                   .build();
 
     subscriptionsRepository.put(subscription);
@@ -70,7 +70,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
 
     List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
     for (Subscription subscription : subscriptions) {
-      subscription.renewingTillDate(currentDate.get().plusMills(seconds*1000));
+      subscription.renewingTillDate(currentDate.get().plusMills(seconds * 1000));
       subscriptionsRepository.put(subscription);
     }
   }
