@@ -27,7 +27,7 @@ public class PushChannelModule extends AbstractModule {
     bind(String.class).annotatedWith(Names.named("SerializationPolicyDirectory")).toInstance(serializationPolicyDirectory);
     bind(SubscriptionsRepository.class).to(MemcachSubscriptionsRepository.class);
 
-    install(new ServletModule(){
+    install(new ServletModule() {
       @Override
       protected void configureServlets() {
         serve("/pushChannelService").with(PushChannelServiceImpl.class);

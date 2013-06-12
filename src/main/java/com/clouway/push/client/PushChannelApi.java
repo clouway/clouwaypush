@@ -10,7 +10,7 @@ public interface PushChannelApi {
 
   boolean hasOpenedChannel();
 
-  void connect();
+  void connect(AsyncConnectCallback callback);
 
   void subscribe(PushEvent.Type type, AsyncSubscribeCallback callback);
 

@@ -4,7 +4,6 @@ import com.clouway.push.client.channelapi.Channel;
 import com.clouway.push.client.channelapi.ChannelImpl;
 import com.clouway.push.client.channelapi.PushChannelService;
 import com.clouway.push.client.channelapi.PushChannelServiceAsync;
-import com.clouway.push.client.subscriber.Subscriber;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
@@ -12,6 +11,8 @@ import com.google.gwt.inject.client.AbstractGinModule;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+
+import java.util.Random;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -44,7 +45,29 @@ public class PushChannelGinModule extends AbstractGinModule {
 
   @Provides
   @CurrentSubscriber
+  @Singleton
   public String getCurrentSubscriber() {
-    return Subscriber.getValue();
+    return getUniqueSubscriberId();
+  }
+
+  private String getUniqueSubscriberId() {
+
+    StringBuilder builder = new StringBuilder();
+
+    int M = 10;
+    int N = 100;
+
+    int in, im = 0;
+
+    for (in = 0; in < N && im < M; ++in) {
+
+      int rn = N - in;
+      int rm = M - im;
+      if (new Random().nextInt() % rn < rm) {
+        builder.append(String.valueOf(in + 1));
+      }
+    }
+
+    return builder.toString();
   }
 }

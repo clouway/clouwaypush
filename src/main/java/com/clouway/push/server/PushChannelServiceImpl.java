@@ -21,6 +21,7 @@ import static com.clouway.push.server.Subscription.aNewSubscription;
 public class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
 
   Logger log = Logger.getLogger(this.getClass().getSimpleName());
+
   private final SubscriptionsRepository subscriptionsRepository;
   private final Provider<DateTime> currentDate;
 
@@ -56,7 +57,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   @Override
   public void unsubscribe(String subscriber,PushEvent.Type eventType) {
 
-    log.info("Unsubscribe... user: " + subscriber);
+    log.info("Unsubscribe user: " + subscriber + " , from event: " + eventType.getEventName());
 
     if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
       subscriptionsRepository.removeSubscription(eventType, subscriber);

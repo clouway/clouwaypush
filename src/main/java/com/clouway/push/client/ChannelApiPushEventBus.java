@@ -33,28 +33,42 @@ public class ChannelApiPushEventBus implements PushEventBus {
   @Override
   public HandlerRegistration addHandler(final PushEvent.Type type, final PushEventHandler handler) {
 
-    if (!pushChannelApi.hasOpenedChannel()) {
-        pushChannelApi.connect();
-    }
-
     final HandlerRegistration[] handlerRegistration = {null};
 
-    pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
+    if (!pushChannelApi.hasOpenedChannel()) {
 
-      @Override
-      public void onSuccess() {
-        handlerRegistration[0] = eventBus.addHandler(type, handler);
-      }
-    });
+      pushChannelApi.connect(new AsyncConnectCallback() {
 
-    return new HandlerRegistration(){
+        @Override
+        public void onConnect() {
+
+          pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
+
+            @Override
+            public void onSuccess() {
+              handlerRegistration[0] = eventBus.addHandler(type, handler);
+            }
+          });
+        }
+      });
+    } else {
+
+      pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
+        @Override
+        public void onSuccess() {
+          handlerRegistration[0] = eventBus.addHandler(type, handler);
+        }
+      });
+    }
+
+    return new HandlerRegistration() {
       @Override
       public void removeHandler() {
 
-        pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack(){
+        pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack() {
           @Override
           public void onSuccess() {
-            if(handlerRegistration[0] != null){
+            if (handlerRegistration[0] != null) {
               handlerRegistration[0].removeHandler();
             }
           }

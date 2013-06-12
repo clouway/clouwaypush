@@ -5,7 +5,6 @@ import com.clouway.push.client.channelapi.Channel;
 import com.clouway.push.client.channelapi.ChannelListener;
 import com.clouway.push.client.channelapi.PushChannelServiceAsync;
 import com.clouway.push.shared.PushEvent;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamFactory;
@@ -20,8 +19,8 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
   private final PushChannelServiceAsync pushChannelServiceAsync;
   private final Channel channel;
-  private ImAliveTimer timer;
-  private Provider<String> subscriber;
+  private final ImAliveTimer timer;
+  private final Provider<String> subscriber;
 
   private boolean openedChannel = false;
   private PushEventListener listener;
@@ -44,27 +43,26 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
   }
 
   @Override
-  public void connect() {
+  public void connect(final AsyncConnectCallback callback) {
+
     pushChannelServiceAsync.removeSubscriptions(subscriber.get(), new AsyncCallback<Void>(){
       @Override
       public void onFailure(Throwable caught) {
-
       }
 
       @Override
       public void onSuccess(Void result) {
-        openChannel();
+        openChannel(callback);
       }
     });
   }
 
-  public void openChannel() {
+  public void openChannel(final AsyncConnectCallback callback) {
 
     pushChannelServiceAsync.openChannel(subscriber.get(), new AsyncCallback<String>() {
 
       @Override
       public void onFailure(Throwable throwable) {
-        openChannel();
       }
 
       @Override
@@ -85,11 +83,12 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
           @Override
           public void onTokenExpire() {
-            openChannel();
+            openChannel(callback);
           }
         });
 
         openedChannel = true;
+        callback.onConnect();
       }
     });
   }
@@ -101,12 +100,10 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
       @Override
       public void onFailure(Throwable caught) {
-        GWT.log("Subscription of user: " + subscriber.get() + " for event: " + type.getEventName() + " has failed.");
       }
 
       @Override
       public void onSuccess(Void result) {
-        GWT.log("Successfully subscribed user: " + subscriber.get() + " for event: " + type.getEventName());
         callback.onSuccess();
       }
     });
