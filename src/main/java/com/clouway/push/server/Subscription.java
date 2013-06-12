@@ -29,9 +29,8 @@ public class Subscription implements Serializable {
     private String subscriber;
 
     private DateTime expirationDateAndTime;
-    private Integer timesSubscribed = 0;
-    private PushEvent.Type type;
 
+    private PushEvent.Type type;
 
     public Builder eventName(String eventName) {
       this.eventName = eventName;
@@ -54,11 +53,6 @@ public class Subscription implements Serializable {
       return this;
     }
 
-    public Builder timesSubscribed(Integer timesSubscribed) {
-      this.timesSubscribed = timesSubscribed;
-      return this;
-    }
-
     public Subscription build() {
 
       Subscription subscription = new Subscription();
@@ -66,12 +60,10 @@ public class Subscription implements Serializable {
       subscription.eventName = eventName;
       subscription.subscriber = subscriber;
       subscription.expirationDate = expirationDateAndTime;
-      subscription.timesSubscribed = timesSubscribed;
       subscription.eventType = type;
 
       return subscription;
     }
-
   }
 
   private PushEvent.Type eventType;
@@ -79,8 +71,8 @@ public class Subscription implements Serializable {
   private String eventName;
 
   private String subscriber;
+
   private DateTime expirationDate;
-  private Integer timesSubscribed = 0;
 
   public String getEventName() {
     return eventName;
@@ -96,14 +88,6 @@ public class Subscription implements Serializable {
 
   public DateTime getExpirationDate() {
     return expirationDate;
-  }
-
-  public void setTimesSubscribed(Integer timesSubscribed) {
-    this.timesSubscribed = timesSubscribed;
-  }
-
-  public Integer getTimesSubscribed() {
-    return timesSubscribed;
   }
 
   public void renewingTillDate(DateTime dateTime) {

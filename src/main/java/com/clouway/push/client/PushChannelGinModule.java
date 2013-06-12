@@ -47,27 +47,21 @@ public class PushChannelGinModule extends AbstractGinModule {
   @CurrentSubscriber
   @Singleton
   public String getCurrentSubscriber() {
-    return getUniqueSubscriberId();
+    return getSubscriberToken(15);
   }
 
-  private String getUniqueSubscriberId() {
+  private String getSubscriberToken(int length) {
 
-    StringBuilder builder = new StringBuilder();
+    String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456";
 
-    int M = 10;
-    int N = 100;
+    Random random = new Random();
+    StringBuilder sb = new StringBuilder();
 
-    int in, im = 0;
-
-    for (in = 0; in < N && im < M; ++in) {
-
-      int rn = N - in;
-      int rm = M - im;
-      if (new Random().nextInt() % rn < rm) {
-        builder.append(String.valueOf(in + 1));
-      }
+    for (int i = 0; i < length; i++) {
+      int position = random.nextInt(characters.length());
+      sb.append(characters.charAt(position));
     }
 
-    return builder.toString();
+    return sb.toString();
   }
 }

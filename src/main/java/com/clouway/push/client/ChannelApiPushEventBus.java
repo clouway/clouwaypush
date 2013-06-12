@@ -7,6 +7,9 @@ import com.google.gwt.event.shared.EventBus;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
@@ -14,6 +17,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
   private final EventBus eventBus;
   private final PushChannelApi pushChannelApi;
+  private final Map<String, Integer> eventsMap = new HashMap<String, Integer>();
 
   @Inject
   public ChannelApiPushEventBus(final EventBus eventBus, PushChannelApi pushChannelApi) {
@@ -39,41 +43,61 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
       pushChannelApi.connect(new AsyncConnectCallback() {
 
-        @Override
         public void onConnect() {
-
-          pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
-
-            @Override
-            public void onSuccess() {
-              handlerRegistration[0] = eventBus.addHandler(type, handler);
-            }
-          });
+          subscribeForEvent(type, handlerRegistration, handler);
         }
       });
+
     } else {
 
-      pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
-        @Override
-        public void onSuccess() {
-          handlerRegistration[0] = eventBus.addHandler(type, handler);
-        }
-      });
+      subscribeForEvent(type, handlerRegistration, handler);
+
     }
 
     return new HandlerRegistration() {
-      @Override
+
       public void removeHandler() {
 
-        pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack() {
-          @Override
-          public void onSuccess() {
-            if (handlerRegistration[0] != null) {
-              handlerRegistration[0].removeHandler();
-            }
+        if (eventsMap.containsKey(type.getEventName())) {
+
+          eventsMap.put(type.getEventName(), eventsMap.get(type.getEventName()) - 1);
+
+          if (eventsMap.get(type.getEventName()) == 0) {
+
+            pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack() {
+
+              public void onSuccess() {
+
+                if (handlerRegistration[0] != null) {
+                  handlerRegistration[0].removeHandler();
+                }
+
+                eventsMap.remove(type.getEventName());
+              }
+            });
           }
-        });
+        }
       }
     };
+  }
+
+  private void subscribeForEvent(final PushEvent.Type type, final HandlerRegistration[] handlerRegistration, final PushEventHandler handler) {
+
+    if (eventsMap.containsKey(type.getEventName())) {
+
+      handlerRegistration[0] = eventBus.addHandler(type, handler);
+      eventsMap.put(type.getEventName(), eventsMap.get(type.getEventName()) + 1);
+
+    } else {
+
+      pushChannelApi.subscribe(type, new AsyncSubscribeCallback() {
+
+        @Override
+        public void onSuccess() {
+          handlerRegistration[0] = eventBus.addHandler(type, handler);
+          eventsMap.put(type.getEventName(), 1);
+        }
+      });
+    }
   }
 }
