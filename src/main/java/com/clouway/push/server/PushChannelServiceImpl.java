@@ -33,7 +33,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public String openChannel(String subscriber) {
+  public String connect(String subscriber) {
 
     log.info("Open channel for user: " + subscriber);
 

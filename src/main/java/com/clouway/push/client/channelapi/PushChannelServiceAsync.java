@@ -8,7 +8,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public interface PushChannelServiceAsync {
 
-  void openChannel(String subscriber, AsyncCallback<String> async);
+  void connect(String subscriber, AsyncCallback<String> async);
 
   void subscribe(String subscriber, PushEvent.Type type, AsyncCallback<Void> async);
 

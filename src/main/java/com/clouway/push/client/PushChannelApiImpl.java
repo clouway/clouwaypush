@@ -49,37 +49,60 @@ public class PushChannelApiImpl implements PushChannelApi {
   }
 
   @Override
-  public void connect(final AsyncConnectCallback callback) {
+  public void connect(final AsyncConnectCallback connectCallback) {
+    establishNewConnection(connectCallback);
+  }
 
-    pushChannelServiceAsync.openChannel(subscriber.get(), new AsyncCallback<String>() {
+  private void establishNewConnection(final AsyncConnectCallback connectCallback) {
+
+    pushChannelServiceAsync.connect(subscriber.get(), new AsyncCallback<String>() {
+
+      @Override
+      public void onFailure(Throwable caught) {
+      }
+
+      @Override
+      public void onSuccess(String channelToken) {
+
+        openChannel(channelToken);
+
+        openedChannel = true;
+        connectCallback.onConnect();
+      }
+    });
+  }
+
+  private void establishNewConnection() {
+
+    pushChannelServiceAsync.connect(subscriber.get(), new AsyncCallback<String>() {
 
       public void onFailure(Throwable caught) {
       }
 
       public void onSuccess(String channelToken) {
+        openChannel(channelToken);
+      }
+    });
+  }
 
-        channel.open(channelToken, new ChannelListener() {
+  private void openChannel(String channelToken) {
 
-          public void onMessage(String json) {
-            try {
-              SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
-              PushEvent pushEvent = (PushEvent) reader.readObject();
-              listener.onPushEvent(pushEvent);
-            } catch (SerializationException e) {
-              throw new RuntimeException("Unable to deserialize " + json, e);
-            }
-          }
+    channel.open(channelToken, new ChannelListener() {
 
-          public void onTokenExpire() {
-            connect(null);
-          }
-        });
-
-        openedChannel = true;
-
-        if (callback != null) {
-          callback.onConnect();
+      @Override
+      public void onMessage(String json) {
+        try {
+          SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
+          PushEvent pushEvent = (PushEvent) reader.readObject();
+          listener.onPushEvent(pushEvent);
+        } catch (SerializationException e) {
+          throw new RuntimeException("Unable to deserialize " + json, e);
         }
+      }
+
+      @Override
+      public void onTokenExpire() {
+        establishNewConnection();
       }
     });
   }

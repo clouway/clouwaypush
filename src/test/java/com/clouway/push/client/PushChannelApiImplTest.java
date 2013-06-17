@@ -315,7 +315,7 @@ public class PushChannelApiImplTest {
     final AsyncAction<String> asyncAction = new AsyncAction<String>();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelServiceAsync).openChannel(with(subscriber), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).connect(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
 
       oneOf(channel).open(with("channelToken"), with(channelListener));
@@ -325,16 +325,16 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess("channelToken");
 
     assertTrue(pushChannel.hasOpenedChannel());
-    assertTrue(connectCallback.connected);
+    assertThat(connectCallback.timesCalled, is(1));
   }
 
   @Test
-  public void openNewChannelWhenChannelTokenExpires() {
+  public void reopenChannelWhenTokenExpires() {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelServiceAsync).openChannel(with(subscriber), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).connect(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
 
       oneOf(channel).open(with("channelToken"), with(channelListener));
@@ -344,29 +344,25 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess("channelToken");
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelServiceAsync).openChannel(with(subscriber), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).connect(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      oneOf(channel).open(with("newChannelToken"), with(channelListener));
     }});
 
     channelListener.getValue().onTokenExpire();
+    asyncAction.onSuccess("newChannelToken");
 
-    context.checking(new Expectations() {{
-      oneOf(channel).open(with("channelToken"), with(channelListener));
-    }});
-    asyncAction.onSuccess("channelToken");
-
-    assertThat(connectCallback.timesConnected, is(1));
     assertTrue(pushChannel.hasOpenedChannel());
+    assertThat(connectCallback.timesCalled, is(1));
   }
 
   private class AsyncConnectCallbackImpl implements AsyncConnectCallback {
 
-    boolean connected = false;
-    int timesConnected = 0;
+    int timesCalled = 0;
 
     public void onConnect() {
-      connected = true;
-      timesConnected++;
+      timesCalled++;
     }
   }
 
@@ -402,75 +398,4 @@ public class PushChannelApiImplTest {
     public void dispatch(SimpleEventHandler handler) {
     }
   }
-
-//  @Test
-//  public void openNewChannel() {
-
-//    final AsyncAction<String> asyncAction = new AsyncAction<String>();
-//    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
-//
-//    context.checking(new Expectations() {{
-//      oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
-//      will(asyncAction);
-//
-//      oneOf(channel).open(with("channelToken"), with(channelListener));
-//    }});
-//
-//    pushChannel.openChannel();
-//    asyncAction.onSuccess("channelToken");
-//
-//    assertThat(pushChannel.hasOpenedChannel(), is(true));
-//  }
-
-//  @Test
-//  public void reopenChannelWhenTokenExpires() {
-//
-//    final AsyncAction<String> asyncAction = new AsyncAction<String>();
-//    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
-//
-//    context.checking(new Expectations() {{
-//      oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
-//      will(asyncAction);
-//
-//      oneOf(channel).open(with("channelToken"), with(channelListener));
-//    }});
-//
-//    pushChannel.openChannel();
-//    asyncAction.onSuccess("channelToken");
-//
-//    final AsyncAction<String> anotherAsyncAction = new AsyncAction<String>();
-//    final InstanceCapture<ChannelListener> anotherChannelListener = new InstanceCapture<ChannelListener>();
-//
-//    context.checking(new Expectations() {{
-//      oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
-//      will(anotherAsyncAction);
-//
-//      oneOf(channel).open(with("newChannelToken"), with(anotherChannelListener));
-//    }});
-//
-//    channelListener.getValue().onTokenExpire();
-//    anotherAsyncAction.onSuccess("newChannelToken");
-//  }
-//
-//  @Test
-//  public void retryOpeningNewChannelOnFailure() {
-//
-//    final AsyncAction<String> asyncAction = new AsyncAction<String>();
-//    final AsyncAction<String> retryAction = new AsyncAction<String>();
-//    final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
-//
-//    context.checking(new Expectations() {{
-//      oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
-//      will(asyncAction);
-//      never(channel);
-//
-//      oneOf(pushChannelServiceAsync).openChannel(with(any(AsyncCallback.class)));
-//      will(retryAction);
-//      oneOf(channel).open(with("channelToken"), with(channelListener));
-//    }});
-//
-//    pushChannel.openChannel();
-//    asyncAction.onFailure(new RuntimeException());
-//    retryAction.onSuccess("channelToken");
-//  }
 }
