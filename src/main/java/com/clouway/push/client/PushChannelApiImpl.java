@@ -12,23 +12,29 @@ import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import java.util.List;
+
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
+public class PushChannelApiImpl implements PushChannelApi {
 
   private final PushChannelServiceAsync pushChannelServiceAsync;
   private final Channel channel;
-  private final ImAliveTimer timer;
+  private final KeepAliveTimer timer;
   private final Provider<String> subscriber;
 
   private boolean openedChannel = false;
+  private int subscribingAttempts;
+  private int unsubscribingAttempts;
+  private int timesSubscribed;
+
   private PushEventListener listener;
 
   @Inject
   public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync,
                             Channel channel,
-                            ImAliveTimer timer,
+                            KeepAliveTimer timer,
                             @CurrentSubscriber Provider<String> subscriber) {
     this.pushChannelServiceAsync = pushChannelServiceAsync;
     this.channel = channel;
@@ -45,32 +51,15 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
   @Override
   public void connect(final AsyncConnectCallback callback) {
 
-    pushChannelServiceAsync.removeSubscriptions(subscriber.get(), new AsyncCallback<Void>(){
-      @Override
+    pushChannelServiceAsync.openChannel(subscriber.get(), new AsyncCallback<String>() {
+
       public void onFailure(Throwable caught) {
       }
 
-      @Override
-      public void onSuccess(Void result) {
-        openChannel(callback);
-      }
-    });
-  }
-
-  public void openChannel(final AsyncConnectCallback callback) {
-
-    pushChannelServiceAsync.openChannel(subscriber.get(), new AsyncCallback<String>() {
-
-      @Override
-      public void onFailure(Throwable throwable) {
-      }
-
-      @Override
       public void onSuccess(String channelToken) {
 
         channel.open(channelToken, new ChannelListener() {
 
-          @Override
           public void onMessage(String json) {
             try {
               SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
@@ -81,14 +70,16 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
             }
           }
 
-          @Override
           public void onTokenExpire() {
-            openChannel(callback);
+            connect(null);
           }
         });
 
         openedChannel = true;
-        callback.onConnect();
+
+        if (callback != null) {
+          callback.onConnect();
+        }
       }
     });
   }
@@ -98,34 +89,61 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
 
     pushChannelServiceAsync.subscribe(subscriber.get(), type, new AsyncCallback<Void>() {
 
-      @Override
       public void onFailure(Throwable caught) {
+
+        List<Integer> secondsDelays = timer.getSecondsDelays();
+
+        if (subscribingAttempts < secondsDelays.size()) {
+
+          timer.scheduleTimedAction(subscribingAttempts, secondsDelays, new TimedAction() {
+
+            public void execute() {
+              subscribingAttempts++;
+              subscribe(type, callback);
+            }
+          });
+
+        } else {
+          subscribingAttempts = 0;
+          throw new UnableToSubscribeForEventException();
+        }
       }
 
-      @Override
       public void onSuccess(Void result) {
+        subscribingAttempts = 0;
+        timesSubscribed++;
         callback.onSuccess();
       }
     });
   }
 
   @Override
-  public void addPushEventListener(PushEventListener listener) {
-    this.listener = listener;
-  }
-
-  @Override
-  public void unsubscribe(final PushEvent.Type type, final AsyncUnsubscribeCallBack callBack) {
+  public void unsubscribe(final PushEvent.Type type, final AsyncUnsubscribeCallBack callback) {
 
     pushChannelServiceAsync.unsubscribe(subscriber.get(), type, new AsyncCallback<Void>() {
 
-      @Override
       public void onFailure(Throwable caught) {
+
+        List<Integer> secondsDelays = timer.getSecondsDelays();
+
+        if (unsubscribingAttempts < secondsDelays.size()) {
+          timer.scheduleTimedAction(unsubscribingAttempts, secondsDelays, new TimedAction() {
+            @Override
+            public void execute() {
+              unsubscribingAttempts++;
+              unsubscribe(type, callback);
+            }
+          });
+        } else {
+          unsubscribingAttempts = 0;
+          throw new UnableToUnsubscribeFromEventException();
+        }
       }
 
-      @Override
       public void onSuccess(Void result) {
-        callBack.onSuccess();
+        unsubscribingAttempts = 0;
+        timesSubscribed--;
+        callback.onSuccess();
       }
     });
   }
@@ -133,15 +151,21 @@ public class PushChannelApiImpl implements PushChannelApi, OnTimeCallBack {
   @Override
   public void onTime() {
 
-    pushChannelServiceAsync.iAmAlive(subscriber.get(), timer.getSeconds() + timer.getSeconds(), new AsyncCallback<Void>() {
+    if (timesSubscribed > 0) {
 
-      @Override
-      public void onFailure(Throwable caught) {
-      }
+      pushChannelServiceAsync.keepAlive(subscriber.get(), timer.getSeconds(), new AsyncCallback<Void>() {
 
-      @Override
-      public void onSuccess(Void result) {
-      }
-    });
+        public void onFailure(Throwable caught) {
+        }
+
+        public void onSuccess(Void result) {
+        }
+      });
+    }
+  }
+
+  @Override
+  public void addPushEventListener(PushEventListener listener) {
+    this.listener = listener;
   }
 }

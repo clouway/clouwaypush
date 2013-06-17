@@ -77,11 +77,6 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public void removeSubscriptions(String subscriber) {
-    subscriptionsRepository.removeAllSubscriptions(subscriber);
-  }
-
-  @Override
   public PushEvent dummyMethod() {
     return null;
   }

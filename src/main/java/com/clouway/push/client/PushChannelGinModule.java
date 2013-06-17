@@ -12,6 +12,8 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -39,8 +41,14 @@ public class PushChannelGinModule extends AbstractGinModule {
   }
 
   @Provides
-  public ImAliveTimer getImAliveTimer() {
-    return new ImAliveTimerImpl(30);
+  @Singleton
+  public KeepAliveTimer getImAliveTimer() {
+
+    List<Integer> secondsDelays = new ArrayList<Integer>();
+    secondsDelays.add(1);
+    secondsDelays.add(3);
+
+    return new KeepAliveTimerImpl(30, secondsDelays);
   }
 
   @Provides

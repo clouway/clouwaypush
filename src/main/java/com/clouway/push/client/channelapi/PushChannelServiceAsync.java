@@ -16,7 +16,5 @@ public interface PushChannelServiceAsync {
 
   void dummyMethod(AsyncCallback<PushEvent> async);
 
-  void iAmAlive(String subscriber, int seconds, AsyncCallback<Void> async);
-
-  void removeSubscriptions(String subscriber, AsyncCallback<Void> asyncCallback);
+  void keepAlive(String subscriber, int seconds, AsyncCallback<Void> async);
 }
