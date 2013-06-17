@@ -223,10 +223,7 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess(null);
 
     context.checking(new Expectations() {{
-      oneOf(timer).getSeconds();
-      will(returnValue(60));
-
-      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(any(AsyncCallback.class)));
     }});
 
     pushChannel.onTime();
@@ -244,10 +241,7 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess(null);
 
     context.checking(new Expectations() {{
-      oneOf(timer).getSeconds();
-      will(returnValue(60));
-
-      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
     }});
 
@@ -260,10 +254,7 @@ public class PushChannelApiImplTest {
     asyncAction.onFailure(new RuntimeException());
 
     context.checking(new Expectations() {{
-      oneOf(timer).getSeconds();
-      will(returnValue(60));
-
-      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
     }});
 
@@ -282,10 +273,7 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess(null);
 
     context.checking(new Expectations() {{
-      oneOf(timer).getSeconds();
-      will(returnValue(60));
-
-      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
     }});
 
@@ -298,10 +286,7 @@ public class PushChannelApiImplTest {
     asyncAction.onFailure(new RuntimeException());
 
     context.checking(new Expectations() {{
-      oneOf(timer).getSeconds();
-      will(returnValue(60));
-
-      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(any(AsyncCallback.class)));
       will(asyncAction);
     }});
 

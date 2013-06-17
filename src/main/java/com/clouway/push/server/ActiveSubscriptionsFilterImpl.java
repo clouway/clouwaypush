@@ -17,7 +17,7 @@ public class ActiveSubscriptionsFilterImpl implements ActiveSubscriptionsFilter 
   private Provider<DateTime> currentDate;
 
   @Inject
-  public ActiveSubscriptionsFilterImpl(SubscriptionsRepository subscriptionsRepository, @CurrentDateAndTime Provider<DateTime>  currentDate) {
+  public ActiveSubscriptionsFilterImpl(SubscriptionsRepository subscriptionsRepository, @SubscriptionsExpirationDate Provider<DateTime>  currentDate) {
     this.subscriptionsRepository = subscriptionsRepository;
     this.currentDate = currentDate;
   }

@@ -23,41 +23,41 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   Logger log = Logger.getLogger(this.getClass().getSimpleName());
 
   private final SubscriptionsRepository subscriptionsRepository;
-  private final Provider<DateTime> currentDate;
+  private final Provider<DateTime> expirationDate;
 
   @Inject
   public PushChannelServiceImpl(Provider<SubscriptionsRepository> subscriptionsRepository,
-                                @CurrentDateAndTime Provider<DateTime> currentDate) {
+                                @SubscriptionsExpirationDate Provider<DateTime> subscriptionsExpirationDate) {
     this.subscriptionsRepository = subscriptionsRepository.get();
-    this.currentDate = currentDate;
+    this.expirationDate = subscriptionsExpirationDate;
   }
 
   @Override
   public String connect(String subscriber) {
 
-    log.info("Open channel for user: " + subscriber);
+    log.info("Open channel for subscriber: " + subscriber);
 
     return ChannelServiceFactory.getChannelService().createChannel(subscriber);
   }
 
   @Override
-  public void subscribe(String subscriber, PushEvent.Type eventType) {
+  public void subscribe(String subscriber, PushEvent.Type type) {
 
-    log.info("subscribe me for event " + eventType.getEventName() + "   user : "+ subscriber);
+    log.info("Subscribe: " + subscriber + " for event: " + type.getEventName());
 
-    Subscription subscription = aNewSubscription().eventName(eventType.getEventName())
-                                                  .eventType(eventType)
+    Subscription subscription = aNewSubscription().eventName(type.getEventName())
+                                                  .eventType(type)
                                                   .subscriber(subscriber)
-                                                  .expirationDateAndTime(currentDate.get().plusMills(60 * 1000))
+                                                  .expirationDate(expirationDate.get())
                                                   .build();
 
     subscriptionsRepository.put(subscription);
   }
 
   @Override
-  public void unsubscribe(String subscriber,PushEvent.Type eventType) {
+  public void unsubscribe(String subscriber, PushEvent.Type eventType) {
 
-    log.info("Unsubscribe user: " + subscriber + " , from event: " + eventType.getEventName());
+    log.info("Unsubscribe: " + subscriber + " from event: " + eventType.getEventName());
 
     if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
       subscriptionsRepository.removeSubscription(eventType, subscriber);
@@ -65,13 +65,13 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public void keepAlive(String subscriber, int seconds) {
+  public void keepAlive(String subscriber) {
 
-    log.info("Im alive... user: " + subscriber + "   time: " + seconds);
+    log.info("Keep alive subscriber: " + subscriber);
 
     List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
     for (Subscription subscription : subscriptions) {
-      subscription.renewingTillDate(currentDate.get().plusMills(seconds * 1000));
+      subscription.renewingTillDate(expirationDate.get());
       subscriptionsRepository.put(subscription);
     }
   }

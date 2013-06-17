@@ -48,7 +48,7 @@ public class Subscription implements Serializable {
       return this;
     }
 
-    public Builder expirationDateAndTime(DateTime expirationDateAndTime) {
+    public Builder expirationDate(DateTime expirationDateAndTime) {
       this.expirationDateAndTime = expirationDateAndTime;
       return this;
     }

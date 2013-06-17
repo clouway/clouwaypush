@@ -15,9 +15,11 @@ import com.google.inject.servlet.ServletModule;
 public class PushChannelModule extends AbstractModule {
 
   private final String serializationPolicyDirectory;
+  private int subscriptionsExpirationMinutes;
 
-  public PushChannelModule(String serializationPolicyDirectory) {
+  public PushChannelModule(String serializationPolicyDirectory, int subscriptionsExpirationMinutes) {
     this.serializationPolicyDirectory = serializationPolicyDirectory;
+    this.subscriptionsExpirationMinutes = subscriptionsExpirationMinutes;
   }
 
   @Override
@@ -36,9 +38,13 @@ public class PushChannelModule extends AbstractModule {
   }
 
   @Provides
-  @CurrentDateAndTime
-  DateTime getCurrentDateAndTime() {
-    return new DateTime();
+  @SubscriptionsExpirationDate
+  DateTime getSubscriptionExpirationDate() {
+
+    DateTime expirationDate = new DateTime();
+    expirationDate.plusMills(subscriptionsExpirationMinutes * 1000);
+
+    return expirationDate;
   }
 
   @Provides

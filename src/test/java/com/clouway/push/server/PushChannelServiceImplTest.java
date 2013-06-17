@@ -2,10 +2,23 @@ package com.clouway.push.server;
 
 import com.clouway.push.client.InstanceCapture;
 import com.clouway.push.client.channelapi.PushChannelService;
+import com.clouway.push.shared.PushEvent;
+import com.clouway.push.shared.PushEventHandler;
+import com.clouway.push.shared.util.DateTime;
+import com.google.inject.util.Providers;
+import org.jmock.Expectations;
 import org.jmock.auto.Mock;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.clouway.push.server.Subscription.aNewSubscription;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -15,143 +28,102 @@ public class PushChannelServiceImplTest {
   @Rule
   public final JUnitRuleMockery context = new JUnitRuleMockery();
 
+  @Mock
+  private SubscriptionsRepository repository;
+
   private PushChannelService pushChannelService;
 
-  @Mock
-  private SubscriptionsRepository subscriptionsRepository;
+  private final DateTime subscriptionsExpirationDate = new DateTime();
+  private final String subscriber = "john@gmail.com";
+  private SimpleEvent event = new SimpleEvent();
 
-  //@Mock
-  //private Subscriber subscriber;
+  private InstanceCapture<Subscription> subscriptionCapture = new InstanceCapture<Subscription>();
 
-  private InstanceCapture<Subscription> expectedSubscription;
-
-//  private final DateTime currentDateAndTime = new DateTime(2013, 6, 5, 10, 15);
-//  private final DateTime expirationDateAndTime = new DateTime(2013, 6, 5, 10, 20);
-
-//  private final SimpleEvent event = new SimpleEvent();
-  private final String subscriberName = "john@gmail.com";
-
-//  final Subscription subscription = aNewSubscription().eventName(event.TYPE.getEventName())
-//                                                      .subscriber(subscriberName)
-//                                                      .expirationDateAndTime(currentDateAndTime)
-//                                                      .timesSubscribed(1)
-//                                                      .build();
+  private Subscription subscription = aNewSubscription().subscriber(subscriber)
+                                                        .eventName("SimpleEvent")
+                                                        .eventType(event.TYPE)
+                                                        .build();
 
   @Before
   public void setUp() {
-//    pushChannelService = new PushChannelServiceImpl(Providers.of(subscriptionsRepository), Providers.of(subscriber), Providers.of(currentDateAndTime));
-    expectedSubscription = new InstanceCapture<Subscription>();
+    pushChannelService = new PushChannelServiceImpl(Providers.of(repository), Providers.of(subscriptionsExpirationDate));
   }
-//
-//  @Test
-//  public void subscribeForNewEvent() {
-//
-//    context.checking(new Expectations() {{
-//      oneOf(subscriber).getName();
-//      will(returnValue(subscriberName));
-//
-//      oneOf(subscriptionsRepository).hasSubscription(event.TYPE, subscriberName);
-//      will(returnValue(false));
-//
-//      oneOf(subscriptionsRepository).put(with(expectedSubscription));
-//    }});
-//
-//    pushChannelService.subscribe(event.TYPE);
-//
-//    assertExpectedSubscription(expectedSubscription.getValue(), 1);
-//  }
-//
-//  @Test
-//  public void subscribeForEventTwice() {
-//
-//    context.checking(new Expectations() {{
-//      oneOf(subscriber).getName();
-//      will(returnValue(subscriberName));
-//
-//      oneOf(subscriptionsRepository).hasSubscription(event.TYPE, subscriberName);
-//      will(returnValue(true));
-//
-//      oneOf(subscriptionsRepository).get(event.TYPE, subscriberName);
-//      will(returnValue(subscription));
-//
-//      oneOf(subscriptionsRepository).put(with(expectedSubscription));
-//    }});
-//
-//    pushChannelService.subscribe(event.TYPE);
-//
-//    assertExpectedSubscription(expectedSubscription.getValue(), 2);
-//  }
-//
-//  @Test
-//  public void unSubscribeFromOnceSubscribedEvent() {
-//
-//    context.checking(new Expectations() {{
-//      oneOf(subscriber).getName();
-//      will(returnValue(subscriberName));
-//
-//      oneOf(subscriptionsRepository).hasSubscription(event.TYPE, subscriberName);
-//      will(returnValue(true));
-//
-//      oneOf(subscriptionsRepository).get(event.TYPE, subscriberName);
-//      will(returnValue(subscription));
-//
-//      oneOf(subscriptionsRepository).removeSubscription(event.TYPE, subscriberName);
-//    }});
-//
-//    pushChannelService.unsubscribe(event.TYPE);
-//  }
-//
-//  @Test
-//  public void unSubscribeFromTwiceSubscribedEvent() {
-//
-//    final Subscription subscription = aNewSubscription().eventName(event.TYPE.getEventName())
-//                                                        .subscriber(subscriberName)
-//                                                        .expirationDateAndTime(currentDateAndTime)
-//                                                        .timesSubscribed(2)
-//                                                        .build();
-//
-//    context.checking(new Expectations() {{
-//      oneOf(subscriber).getName();
-//      will(returnValue(subscriberName));
-//
-//      oneOf(subscriptionsRepository).hasSubscription(event.TYPE, subscriberName);
-//      will(returnValue(true));
-//
-//      oneOf(subscriptionsRepository).get(event.TYPE, subscriberName);
-//      will(returnValue(subscription));
-//
-//      oneOf(subscriptionsRepository).put(with(expectedSubscription));
-//
-//      never(subscriptionsRepository).removeSubscription(with(any(PushEvent.Type.class)), with(any(String.class)));
-//    }});
-//
-//    pushChannelService.unsubscribe(event.TYPE);
-//
-//    assertExpectedSubscription(expectedSubscription.getValue(), 1);
-//  }
-//
-//  private void assertExpectedSubscription(Subscription subscription, int timesSubscriber) {
-//
-//    assertThat(subscription.getEventName(), is(equalTo(event.TYPE.getEventName())));
-//    assertThat(subscription.getSubscriber(), is(equalTo(subscriberName)));
-//    assertThat(subscription.getExpirationDate(), is(equalTo(expirationDateAndTime)));
-//    assertThat(subscription.getTimesSubscribed(), is(timesSubscriber));
-//  }
-//
-//  private class SimpleEventHandler implements PushEventHandler {
-//  }
-//
-//  private static class SimpleEvent extends PushEvent<PushEventHandler> {
-//
-//    private static Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {};
-//
-//    @Override
-//    public Type<PushEventHandler> getAssociatedType() {
-//      return TYPE;
-//    }
-//
-//    @Override
-//    public void dispatch(PushEventHandler handler) {
-//    }
-//  }
+
+  @Test
+  public void subscribeForEvent() {
+
+    context.checking(new Expectations() {{
+      oneOf(repository).put(with(subscriptionCapture));
+    }});
+
+    pushChannelService.subscribe(subscriber, event.TYPE);
+
+    Subscription subscription = subscriptionCapture.getValue();
+
+    assertThat(subscription.getSubscriber(), is(subscriber));
+    assertThat(subscription.getEventName(), is("SimpleEvent"));
+    assertThat(subscription.getEventType(), is(event.getAssociatedType()));
+    assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
+  }
+
+  @Test
+  public void unsubscribeFromSubscribedEvent() {
+
+    context.checking(new Expectations() {{
+      oneOf(repository).hasSubscription(event.TYPE, subscriber);
+      will(returnValue(true));
+
+      oneOf(repository).removeSubscription(event.TYPE, subscriber);
+    }});
+
+    pushChannelService.unsubscribe(subscriber, event.TYPE);
+  }
+
+  @Test
+  public void unsubscribeFromNotSubscribedEvent() {
+
+    context.checking(new Expectations() {{
+      oneOf(repository).hasSubscription(event.TYPE, subscriber);
+      will(returnValue(false));
+
+      never(repository).removeSubscription(event.TYPE, subscriber);
+    }});
+
+    pushChannelService.unsubscribe(subscriber, event.TYPE);
+  }
+
+  @Test
+  public void keepAliveSubscriberSubscriptions() {
+
+    final List<Subscription> subscriptions = new ArrayList<Subscription>();
+    subscriptions.add(subscription);
+
+    context.checking(new Expectations() {{
+      oneOf(repository).findSubscriptions(subscriber);
+      will(returnValue(subscriptions));
+
+      oneOf(repository).put(subscription);
+    }});
+
+    pushChannelService.keepAlive(subscriber);
+
+    assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
+  }
+
+  private class SimpleEventHandler implements PushEventHandler {
+  }
+
+  private class SimpleEvent extends PushEvent<PushEventHandler> {
+
+    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {};
+
+    @Override
+    public Type<PushEventHandler> getAssociatedType() {
+      return TYPE;
+    }
+
+    @Override
+    public void dispatch(PushEventHandler handler) {
+    }
+  }
 }

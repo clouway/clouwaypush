@@ -14,7 +14,7 @@ public interface PushChannelServiceAsync {
 
   void unsubscribe(String subscriber, PushEvent.Type event, AsyncCallback<Void> async);
 
-  void dummyMethod(AsyncCallback<PushEvent> async);
+  void keepAlive(String subscriber, AsyncCallback<Void> async);
 
-  void keepAlive(String subscriber, int seconds, AsyncCallback<Void> async);
+  void dummyMethod(AsyncCallback<PushEvent> async);
 }

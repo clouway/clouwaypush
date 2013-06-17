@@ -196,7 +196,7 @@ public class PushChannelApiImpl implements PushChannelApi {
 
     if (hasSubscriptions()) {
 
-      pushChannelServiceAsync.keepAlive(subscriber.get(), timer.getSeconds(), new AsyncCallback<Void>() {
+      pushChannelServiceAsync.keepAlive(subscriber.get(), new AsyncCallback<Void>() {
 
         @Override
         public void onFailure(Throwable caught) {
