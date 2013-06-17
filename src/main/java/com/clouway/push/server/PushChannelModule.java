@@ -40,11 +40,13 @@ public class PushChannelModule extends AbstractModule {
   @Provides
   @SubscriptionsExpirationDate
   DateTime getSubscriptionExpirationDate() {
+    return new DateTime().plusMills(subscriptionsExpirationMinutes * 1000);
+  }
 
-    DateTime expirationDate = new DateTime();
-    expirationDate.plusMills(subscriptionsExpirationMinutes * 1000);
-
-    return expirationDate;
+  @Provides
+  @CurrentDate
+  DateTime getCurrentDate() {
+    return new DateTime();
   }
 
   @Provides
