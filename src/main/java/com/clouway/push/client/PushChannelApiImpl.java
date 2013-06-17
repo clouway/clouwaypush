@@ -23,23 +23,31 @@ public class PushChannelApiImpl implements PushChannelApi {
   private final Channel channel;
   private final KeepAliveTimer timer;
   private final Provider<String> subscriber;
+  private Provider<List<Integer>> subscribeRequestSecondsRetries;
+  private Provider<List<Integer>> unsubscribeRequestSecondsRetries;
+  private Provider<List<Integer>> keepAliveRequestSecondsRetries;
 
   private boolean openedChannel = false;
-  private int subscribingAttempts;
-  private int unsubscribingAttempts;
-  private int timesSubscribed;
-
+  private int subscriptionsCount;
   private PushEventListener listener;
 
   @Inject
   public PushChannelApiImpl(PushChannelServiceAsync pushChannelServiceAsync,
                             Channel channel,
                             KeepAliveTimer timer,
-                            @CurrentSubscriber Provider<String> subscriber) {
+                            @CurrentSubscriber Provider<String> subscriber,
+                            @SubscribeRequestSecondsRetries Provider<List<Integer>> subscribeRequestSecondsRetries,
+                            @UnsubscribeRequestSecondsRetries Provider<List<Integer>> unsubscribeRequestSecondsRetries,
+                            @KeepAliveRequestSecondsRetries Provider<List<Integer>> keepAliveRequestSecondsRetries) {
+
     this.pushChannelServiceAsync = pushChannelServiceAsync;
     this.channel = channel;
     this.timer = timer;
     this.subscriber = subscriber;
+    this.subscribeRequestSecondsRetries = subscribeRequestSecondsRetries;
+    this.unsubscribeRequestSecondsRetries = unsubscribeRequestSecondsRetries;
+    this.keepAliveRequestSecondsRetries = keepAliveRequestSecondsRetries;
+
     timer.onTime(this);
   }
 
@@ -109,32 +117,36 @@ public class PushChannelApiImpl implements PushChannelApi {
 
   @Override
   public void subscribe(final PushEvent.Type type, final AsyncSubscribeCallback callback) {
+    subscribeForEvent(0, subscribeRequestSecondsRetries.get(), type, callback);
+  }
+
+  private void subscribeForEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncSubscribeCallback callback) {
 
     pushChannelServiceAsync.subscribe(subscriber.get(), type, new AsyncCallback<Void>() {
 
+      @Override
       public void onFailure(Throwable caught) {
 
-        List<Integer> secondsDelays = timer.getSecondsDelays();
+        if (position < secondsRetries.size()) {
 
-        if (subscribingAttempts < secondsDelays.size()) {
+          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
 
-          timer.scheduleTimedAction(subscribingAttempts, secondsDelays, new TimedAction() {
-
+            @Override
             public void execute() {
-              subscribingAttempts++;
-              subscribe(type, callback);
+              int nextPosition = position + 1;
+              subscribeForEvent(nextPosition, secondsRetries, type, callback);
             }
           });
 
         } else {
-          subscribingAttempts = 0;
           throw new UnableToSubscribeForEventException();
+
         }
       }
 
+      @Override
       public void onSuccess(Void result) {
-        subscribingAttempts = 0;
-        timesSubscribed++;
+        increaseSubscriptionsCount();
         callback.onSuccess();
       }
     });
@@ -142,30 +154,34 @@ public class PushChannelApiImpl implements PushChannelApi {
 
   @Override
   public void unsubscribe(final PushEvent.Type type, final AsyncUnsubscribeCallBack callback) {
+    unsubscribeFromEvent(0, unsubscribeRequestSecondsRetries.get(), type, callback);
+  }
+
+  private void unsubscribeFromEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncUnsubscribeCallBack callback) {
 
     pushChannelServiceAsync.unsubscribe(subscriber.get(), type, new AsyncCallback<Void>() {
 
+      @Override
       public void onFailure(Throwable caught) {
 
-        List<Integer> secondsDelays = timer.getSecondsDelays();
+        if (position < secondsRetries.size()) {
 
-        if (unsubscribingAttempts < secondsDelays.size()) {
-          timer.scheduleTimedAction(unsubscribingAttempts, secondsDelays, new TimedAction() {
+          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
+
             @Override
             public void execute() {
-              unsubscribingAttempts++;
-              unsubscribe(type, callback);
+              int nextPosition = position + 1;
+              unsubscribeFromEvent(nextPosition, secondsRetries, type, callback);
             }
           });
         } else {
-          unsubscribingAttempts = 0;
           throw new UnableToUnsubscribeFromEventException();
         }
       }
 
+      @Override
       public void onSuccess(Void result) {
-        unsubscribingAttempts = 0;
-        timesSubscribed--;
+        decreaseSubscriptionsCount();
         callback.onSuccess();
       }
     });
@@ -173,18 +189,52 @@ public class PushChannelApiImpl implements PushChannelApi {
 
   @Override
   public void onTime() {
+    onTime(0, keepAliveRequestSecondsRetries.get());
+  }
 
-    if (timesSubscribed > 0) {
+  private void onTime(final int position, final List<Integer> secondsRetries) {
+
+    if (hasSubscriptions()) {
 
       pushChannelServiceAsync.keepAlive(subscriber.get(), timer.getSeconds(), new AsyncCallback<Void>() {
 
+        @Override
         public void onFailure(Throwable caught) {
+
+          if (position < secondsRetries.size()) {
+
+            timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
+
+              @Override
+              public void execute() {
+                int nextPosition = position + 1;
+                onTime(nextPosition, secondsRetries);
+              }
+            });
+          } else {
+            throw new SubscriberNotAliveException();
+          }
         }
 
+        @Override
         public void onSuccess(Void result) {
         }
       });
     }
+  }
+
+  private boolean hasSubscriptions() {
+    return subscriptionsCount > 0;
+  }
+
+  private void decreaseSubscriptionsCount() {
+    if (subscriptionsCount > 0) {
+      subscriptionsCount--;
+    }
+  }
+
+  private void increaseSubscriptionsCount() {
+    subscriptionsCount++;
   }
 
   @Override

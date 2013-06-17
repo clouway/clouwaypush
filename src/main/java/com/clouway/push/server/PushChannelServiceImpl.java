@@ -65,7 +65,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   }
 
   @Override
-  public void iAmAlive(String subscriber, int seconds) {
+  public void keepAlive(String subscriber, int seconds) {
 
     log.info("Im alive... user: " + subscriber + "   time: " + seconds);
 

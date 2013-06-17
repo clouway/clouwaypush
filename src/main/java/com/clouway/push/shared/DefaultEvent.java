@@ -3,21 +3,16 @@ package com.clouway.push.shared;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public class DefaultEvent extends PushEvent<DefaultHandler> {
+public class DefaultEvent extends PushEvent<DefaultEventHandler> {
 
-  public static Type<DefaultHandler> TYPE = new Type<DefaultHandler>() {
-    @Override
-    public String getEventName() {
-      return "DefaultEvent";
-    }
-  };
+  public static Type<DefaultEventHandler> TYPE = new Type<DefaultEventHandler>("DefaultEvent");
 
   @Override
-  public Type<DefaultHandler> getAssociatedType() {
+  public Type<DefaultEventHandler> getAssociatedType() {
     return TYPE;
   }
 
   @Override
-  public void dispatch(DefaultHandler handler) {
+  public void dispatch(DefaultEventHandler handler) {
   }
 }

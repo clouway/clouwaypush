@@ -2,8 +2,6 @@ package com.clouway.push.client;
 
 import com.google.gwt.user.client.Timer;
 
-import java.util.List;
-
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
@@ -12,11 +10,9 @@ public class KeepAliveTimerImpl implements KeepAliveTimer {
   private Timer timer;
 
   private final int seconds;
-  private final List<Integer> secondsDelays;
 
-  public KeepAliveTimerImpl(int seconds, List<Integer> secondsDelays) {
+  public KeepAliveTimerImpl(int seconds) {
     this.seconds = seconds;
-    this.secondsDelays = secondsDelays;
   }
 
   public void onTime(final OnTimeCallBack callback){
@@ -30,7 +26,7 @@ public class KeepAliveTimerImpl implements KeepAliveTimer {
   }
 
   @Override
-  public void scheduleTimedAction(int retriesCount, List<Integer> secondsDelays, final TimedAction action) {
+  public void scheduleAction(int seconds, final TimerAction action) {
 
     timer = new Timer() {
       @Override
@@ -38,12 +34,7 @@ public class KeepAliveTimerImpl implements KeepAliveTimer {
         action.execute();
       }
     };
-    timer.schedule(secondsDelays.get(retriesCount));
-  }
-
-  @Override
-  public List<Integer> getSecondsDelays() {
-    return secondsDelays;
+    timer.schedule(seconds * 1000);
   }
 
   public int getSeconds() {

@@ -64,6 +64,8 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
           if (eventsMap.get(type.getEventName()) == 0) {
 
+            eventsMap.remove(type.getEventName());
+
             pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack() {
 
               public void onSuccess() {
@@ -71,8 +73,6 @@ public class ChannelApiPushEventBus implements PushEventBus {
                 if (handlerRegistration[0] != null) {
                   handlerRegistration[0].removeHandler();
                 }
-
-                eventsMap.remove(type.getEventName());
               }
             });
           }

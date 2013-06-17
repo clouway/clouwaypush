@@ -43,12 +43,7 @@ public class PushChannelGinModule extends AbstractGinModule {
   @Provides
   @Singleton
   public KeepAliveTimer getImAliveTimer() {
-
-    List<Integer> secondsDelays = new ArrayList<Integer>();
-    secondsDelays.add(1);
-    secondsDelays.add(3);
-
-    return new KeepAliveTimerImpl(30, secondsDelays);
+    return new KeepAliveTimerImpl(30);
   }
 
   @Provides
@@ -56,6 +51,44 @@ public class PushChannelGinModule extends AbstractGinModule {
   @Singleton
   public String getCurrentSubscriber() {
     return getSubscriberToken(15);
+  }
+
+  @Provides
+  @SubscribeRequestSecondsRetries
+  @Singleton
+  public List<Integer> getSubscribeRequestSecondsRetries() {
+
+    List<Integer> secondsRetries = new ArrayList<Integer>();
+    secondsRetries.add(1);
+
+    return secondsRetries;
+  }
+
+  @Provides
+  @UnsubscribeRequestSecondsRetries
+  @Singleton
+  public List<Integer> getUnsubscribeRequestSecondsRetries() {
+
+    List<Integer> secondsRetries = new ArrayList<Integer>();
+    secondsRetries.add(1);
+
+    return secondsRetries;
+  }
+
+  @Provides
+  @KeepAliveRequestSecondsRetries
+  @Singleton
+  public List<Integer> getKeepAliveRequestSecondsRetries() {
+
+    List<Integer> secondsRetries = new ArrayList<Integer>();
+    secondsRetries.add(1);
+    secondsRetries.add(2);
+    secondsRetries.add(3);
+    secondsRetries.add(5);
+    secondsRetries.add(8);
+    secondsRetries.add(12);
+
+    return secondsRetries;
   }
 
   private String getSubscriberToken(int length) {

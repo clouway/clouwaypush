@@ -51,26 +51,34 @@ public class PushChannelApiImplTest {
 
   private AsyncAction<Void> asyncAction = new AsyncAction<Void>();
 
-  private InstanceCapture<TimedAction> timedAction = new InstanceCapture<TimedAction>();
-
-  private InstanceCapture<Integer> retries = new InstanceCapture<Integer>();
-
-  private List<Integer> secondsDelays = new ArrayList<Integer>();
+  private InstanceCapture<TimerAction> timerAction = new InstanceCapture<TimerAction>();
 
   final AsyncConnectCallbackImpl connectCallback = new AsyncConnectCallbackImpl();
 
   final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
 
+  final List<Integer> subscribeRequestSecondsRetries = new ArrayList<Integer>();
+  final List<Integer> unsubscribeRequestSecondsRetries = new ArrayList<Integer>();
+  final List<Integer> keepAliveRequestSecondsRetries = new ArrayList<Integer>();
+
   @Before
   public void setUp() {
 
-    secondsDelays.add(1);
+    subscribeRequestSecondsRetries.add(1);
+    unsubscribeRequestSecondsRetries.add(1);
+    keepAliveRequestSecondsRetries.add(3);
 
     context.checking(new Expectations() {{
       oneOf(timer).onTime(with(any(OnTimeCallBack.class)));
     }});
 
-    pushChannel = new PushChannelApiImpl(pushChannelServiceAsync, channel, timer, Providers.of(subscriber));
+    pushChannel = new PushChannelApiImpl(pushChannelServiceAsync,
+                                         channel,
+                                         timer,
+                                         Providers.of(subscriber),
+                                         Providers.of(subscribeRequestSecondsRetries),
+                                         Providers.of(unsubscribeRequestSecondsRetries),
+                                         Providers.of(keepAliveRequestSecondsRetries));
   }
 
   @Test
@@ -84,49 +92,33 @@ public class PushChannelApiImplTest {
     pushChannel.subscribe(event.TYPE, subscribeCallback);
     asyncAction.onSuccess(null);
 
-    assertTrue(subscribeCallback.subscribed);
+    assertThat(subscribeCallback.timesCalled, is(1));
   }
 
   @Test
-  public void retrySubscribingForEventSeveralTimes() {
-
-    secondsDelays.add(2);
+  public void retrySubscribingForEventOnce() {
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
     }});
 
     pushChannel.subscribe(event.TYPE, subscribeCallback);
-
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
     asyncAction.onFailure(new RuntimeException());
-    assertThat(retries.getValue(), is(0));
-
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      never(timer);
     }});
 
-    timedAction.getValue().execute();
+    timerAction.getValue().execute();
+    asyncAction.onSuccess(null);
 
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
-    asyncAction.onFailure(new RuntimeException());
-    assertThat(retries.getValue(), is(1));
+    assertThat(subscribeCallback.timesCalled, is(1));
   }
 
   @Test(expected = UnableToSubscribeForEventException.class)
@@ -135,35 +127,22 @@ public class PushChannelApiImplTest {
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
     }});
 
     pushChannel.subscribe(event.TYPE, subscribeCallback);
-
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
     asyncAction.onFailure(new RuntimeException());
-
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
     }});
 
-    timedAction.getValue().execute();
-
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays(); will(returnValue(secondsDelays));
-    }});
-
+    timerAction.getValue().execute();
     asyncAction.onFailure(new RuntimeException());
 
-    assertThat(retries.getValue(), is(1));
+    assertThat(subscribeCallback.timesCalled, is(0));
   }
 
   @Test
@@ -177,51 +156,33 @@ public class PushChannelApiImplTest {
     pushChannel.unsubscribe(event.TYPE, unsubscribeCallback);
     asyncAction.onSuccess(null);
 
-    assertTrue(unsubscribeCallback.unsubscribed);
+    assertThat(unsubscribeCallback.timesCalled, is(1));
   }
 
   @Test
-  public void retryUnsubscribingFromEventSeveralTimes() {
-
-    secondsDelays.add(2);
+  public void retryUnsubscribingFromEventOnce() {
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).unsubscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
     }});
 
     pushChannel.unsubscribe(event.TYPE, unsubscribeCallback);
-
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
     asyncAction.onFailure(new RuntimeException());
-    assertThat(retries.getValue(), is(0));
-
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).unsubscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      never(timer);
     }});
 
-    timedAction.getValue().execute();
+    timerAction.getValue().execute();
+    asyncAction.onSuccess(null);
 
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
-    asyncAction.onFailure(new RuntimeException());
-
-    assertThat(retries.getValue(), is(1));
+    assertThat(unsubscribeCallback.timesCalled, is(1));
   }
 
   @Test(expected = UnableToUnsubscribeFromEventException.class)
@@ -230,39 +191,28 @@ public class PushChannelApiImplTest {
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).unsubscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
     }});
 
     pushChannel.unsubscribe(event.TYPE, unsubscribeCallback);
-
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-
-      oneOf(timer).scheduleTimedAction(with(retries), with(secondsDelays), with(timedAction));
-    }});
-
     asyncAction.onFailure(new RuntimeException());
-
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).unsubscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
       will(asyncAction);
+
+      never(timer);
     }});
 
-    timedAction.getValue().execute();
+    timerAction.getValue().execute();
+    asyncAction.onFailure(null);
 
-
-    context.checking(new Expectations() {{
-      oneOf(timer).getSecondsDelays();
-      will(returnValue(secondsDelays));
-    }});
-
-    asyncAction.onFailure(new RuntimeException());
+    assertThat(unsubscribeCallback.timesCalled, is(0));
   }
 
   @Test
-  public void keepAliveSubscribedSubscribers() {
+  public void keepAliveSubscriberWhoHasSubscriptions() {
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
@@ -283,7 +233,84 @@ public class PushChannelApiImplTest {
   }
 
   @Test
-  public void unsubscribedSubscribersAreNotKeptAlive() {
+  public void retrySendingRequestThatSubscriberIsAlive() {
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.subscribe(event.TYPE, subscribeCallback);
+    asyncAction.onSuccess(null);
+
+    context.checking(new Expectations() {{
+      oneOf(timer).getSeconds();
+      will(returnValue(60));
+
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.onTime();
+
+    context.checking(new Expectations() {{
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
+    }});
+
+    asyncAction.onFailure(new RuntimeException());
+
+    context.checking(new Expectations() {{
+      oneOf(timer).getSeconds();
+      will(returnValue(60));
+
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    timerAction.getValue().execute();
+  }
+
+  @Test(expected = SubscriberNotAliveException.class)
+  public void unableToKeepSubscriberAlive() {
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.subscribe(event.TYPE, subscribeCallback);
+    asyncAction.onSuccess(null);
+
+    context.checking(new Expectations() {{
+      oneOf(timer).getSeconds();
+      will(returnValue(60));
+
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.onTime();
+
+    context.checking(new Expectations() {{
+      oneOf(timer).scheduleAction(with(any(Integer.class)), with(timerAction));
+    }});
+
+    asyncAction.onFailure(new RuntimeException());
+
+    context.checking(new Expectations() {{
+      oneOf(timer).getSeconds();
+      will(returnValue(60));
+
+      oneOf(pushChannelServiceAsync).keepAlive(with(subscriber), with(60), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    timerAction.getValue().execute();
+    asyncAction.onFailure(new RuntimeException());
+  }
+
+  @Test
+  public void subscriberWithoutSubscriptionsIsNotKeptAlive() {
 
     context.checking(new Expectations() {{
       oneOf(pushChannelServiceAsync).subscribe(with(subscriber), with(event.TYPE), with(any(AsyncCallback.class)));
@@ -368,19 +395,19 @@ public class PushChannelApiImplTest {
 
   private class AsyncUnsubscribeCallbackImpl implements AsyncUnsubscribeCallBack {
 
-    boolean unsubscribed = false;
+    int timesCalled = 0;
 
     public void onSuccess() {
-      unsubscribed = true;
+      timesCalled++;
     }
   }
 
   private class AsyncSubscribeCallbackImpl implements AsyncSubscribeCallback {
 
-    boolean subscribed = false;
+    int timesCalled = 0;
 
     public void onSuccess() {
-      subscribed = true;
+      timesCalled++;
     }
   }
 
