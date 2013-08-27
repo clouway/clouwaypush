@@ -5,6 +5,7 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class MemcachSubscriptionsRepository implements SubscriptionsRepository {
   private final MemcacheService memcacheService;
 
   @Inject
-  public MemcachSubscriptionsRepository(MemcacheService memcacheService) {
+  public MemcachSubscriptionsRepository(@Named("MemcacheService") MemcacheService memcacheService) {
     this.memcacheService = memcacheService;
   }
 

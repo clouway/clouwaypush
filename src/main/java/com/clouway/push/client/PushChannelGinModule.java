@@ -11,6 +11,7 @@ import com.google.gwt.inject.client.AbstractGinModule;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public class PushChannelGinModule extends AbstractGinModule {
 
     bind(PushChannelApi.class).to(PushChannelApiImpl.class).in(Singleton.class);
     bind(PushEventBus.class).to(ChannelApiPushEventBus.class).in(Singleton.class);
-    bind(EventBus.class).to(SimpleEventBus.class).in(Singleton.class);
+    bind(EventBus.class).annotatedWith(Names.named("PushEventBus")).to(SimpleEventBus.class).in(Singleton.class);
     bind(Channel.class).to(ChannelImpl.class).in(Singleton.class);
   }
 

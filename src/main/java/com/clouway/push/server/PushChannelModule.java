@@ -6,6 +6,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 
@@ -40,7 +41,7 @@ public class PushChannelModule extends AbstractModule {
   @Provides
   @SubscriptionsExpirationDate
   DateTime getSubscriptionExpirationDate() {
-    return new DateTime().plusMills(subscriptionsExpirationMinutes * 1000);
+    return new DateTime().plusMills(subscriptionsExpirationMinutes * 60 * 1000);
   }
 
   @Provides
@@ -50,6 +51,7 @@ public class PushChannelModule extends AbstractModule {
   }
 
   @Provides
+  @Named("MemcacheService")
   MemcacheService getMemcacheService() {
     return MemcacheServiceFactory.getMemcacheService();
   }

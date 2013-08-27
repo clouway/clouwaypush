@@ -5,6 +5,7 @@ import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
 import com.google.gwt.event.shared.EventBus;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import java.util.HashMap;
@@ -20,7 +21,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
   private final Map<String, Integer> eventsMap = new HashMap<String, Integer>();
 
   @Inject
-  public ChannelApiPushEventBus(final EventBus eventBus, PushChannelApi pushChannelApi) {
+  public ChannelApiPushEventBus(@Named("PushEventBus") final EventBus eventBus, PushChannelApi pushChannelApi) {
 
     this.eventBus = eventBus;
     this.pushChannelApi = pushChannelApi;
