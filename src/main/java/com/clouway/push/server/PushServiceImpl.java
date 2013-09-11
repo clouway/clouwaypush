@@ -1,6 +1,7 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
+import com.google.appengine.api.channel.ChannelFailureException;
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
@@ -40,8 +41,13 @@ public class PushServiceImpl implements PushService {
     List<Subscription> subscriptions = filter.filterSubscriptions(event.getAssociatedType());
 
     ChannelService channelService = ChannelServiceFactory.getChannelService();
-    for (Subscription subscription : subscriptions) {
-      channelService.sendMessage(new ChannelMessage(subscription.getSubscriber(), message));
+
+    try {
+      for (Subscription subscription : subscriptions) {
+        channelService.sendMessage(new ChannelMessage(subscription.getSubscriber(), message));
+      }
+    } catch (ChannelFailureException exception) {
+      throw new UnableToPushEventException(event, exception.getMessage());
     }
   }
 
