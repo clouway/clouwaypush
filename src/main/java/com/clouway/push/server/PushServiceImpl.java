@@ -47,7 +47,7 @@ public class PushServiceImpl implements PushService {
         channelService.sendMessage(new ChannelMessage(subscription.getSubscriber(), message));
       }
     } catch (ChannelFailureException exception) {
-      throw new UnableToPushEventException(event, exception.getMessage());
+      throw new UnableToPushEventException(exception.getMessage());
     }
   }
 
