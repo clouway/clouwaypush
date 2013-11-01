@@ -16,9 +16,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.clouway.push.server.EventTypeMatcher.isType;
 import static com.clouway.push.server.Subscription.aNewSubscription;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -62,7 +63,7 @@ public class PushChannelServiceImplTest {
 
     assertThat(subscription.getSubscriber(), is(subscriber));
     assertThat(subscription.getEventName(), is("SimpleEvent"));
-    assertThat(subscription.getEventType(), is(event.getAssociatedType()));
+    assertThat(subscription.getEventType(), isType(event.getAssociatedType()));
     assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
   }
 
