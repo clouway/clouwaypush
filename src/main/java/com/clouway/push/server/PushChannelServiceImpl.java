@@ -67,8 +67,6 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   @Override
   public void keepAlive(String subscriber) {
 
-    log.info("Keep alive subscriber: " + subscriber);
-
     List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
     for (Subscription subscription : subscriptions) {
       subscription.renewingTillDate(expirationDate.get());
