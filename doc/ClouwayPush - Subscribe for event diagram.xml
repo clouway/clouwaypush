@@ -1,0 +1,663 @@
+<mockup version="1.0" skin="sketch" fontFace="Balsamiq Sans" measuredW="1960" measuredH="1601" mockupW="1941" mockupH="1578">
+  <controls>
+    <control controlID="1" controlTypeID="com.balsamiq.mockups::VRule" x="132" y="250" w="-1" h="1351" measuredW="10" measuredH="100" zOrder="0" locked="false" isInGroup="-1"/>
+    <control controlID="2" controlTypeID="com.balsamiq.mockups::VRule" x="551" y="250" w="-1" h="1351" measuredW="10" measuredH="100" zOrder="1" locked="false" isInGroup="-1">
+      <controlProperties>
+        <stroke>solid</stroke>
+      </controlProperties>
+    </control>
+    <control controlID="3" controlTypeID="com.balsamiq.mockups::VRule" x="1090" y="250" w="-1" h="1351" measuredW="10" measuredH="100" zOrder="2" locked="false" isInGroup="-1"/>
+    <control controlID="4" controlTypeID="com.balsamiq.mockups::TextArea" x="81" y="208" w="113" h="27" measuredW="200" measuredH="140" zOrder="3" locked="false" isInGroup="-1">
+      <controlProperties>
+        <align>center</align>
+        <text>Client</text>
+      </controlProperties>
+    </control>
+    <control controlID="5" controlTypeID="com.balsamiq.mockups::TextArea" x="500" y="208" w="113" h="27" measuredW="200" measuredH="140" zOrder="4" locked="false" isInGroup="-1">
+      <controlProperties>
+        <align>center</align>
+        <text>Server</text>
+      </controlProperties>
+    </control>
+    <control controlID="6" controlTypeID="com.balsamiq.mockups::TextArea" x="1039" y="208" w="113" h="27" measuredW="200" measuredH="140" zOrder="5" locked="false" isInGroup="-1">
+      <controlProperties>
+        <align>center</align>
+        <text>CacheManager</text>
+      </controlProperties>
+    </control>
+    <control controlID="7" controlTypeID="com.balsamiq.mockups::Arrow" x="136" y="272" w="419" h="10" measuredW="150" measuredH="100" zOrder="6" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="8" controlTypeID="com.balsamiq.mockups::Label" x="183" y="251" w="-1" h="-1" measuredW="309" measuredH="21" zOrder="7" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>subscribeMe%28user@mail.com%2C%20RegisteredTaskEvent%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="9" controlTypeID="com.balsamiq.mockups::Arrow" x="557" y="272" w="539" h="10" measuredW="150" measuredH="100" zOrder="8" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="10" controlTypeID="com.balsamiq.mockups::Label" x="731" y="251" w="-1" h="-1" measuredW="189" measuredH="21" zOrder="9" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>store%28Subscription%20subscription%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="11" controlTypeID="com.balsamiq.mockups::Label" x="80" y="267" w="-1" h="-1" measuredW="45" measuredH="21" zOrder="10" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>9%3A00%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="12" controlTypeID="com.balsamiq.mockups::TextArea" x="1563" y="208" w="113" h="27" measuredW="200" measuredH="140" zOrder="11" locked="false" isInGroup="-1">
+      <controlProperties>
+        <align>center</align>
+        <text>CacheManager</text>
+      </controlProperties>
+    </control>
+    <control controlID="13" controlTypeID="__group__" x="1210" y="23" w="212" h="121" measuredW="212" measuredH="121" zOrder="12" locked="false" isInGroup="-1">
+      <groupChildrenDescriptors>
+        <control controlID="0" controlTypeID="com.balsamiq.mockups::TextArea" x="0" y="0" w="212" h="121" measuredW="200" measuredH="140" zOrder="0" locked="false" isInGroup="13">
+          <controlProperties>
+            <align>center</align>
+            <text>Subscription</text>
+          </controlProperties>
+        </control>
+        <control controlID="1" controlTypeID="com.balsamiq.mockups::TextArea" x="0" y="38" w="212" h="83" measuredW="200" measuredH="140" zOrder="1" locked="false" isInGroup="13">
+          <controlProperties>
+            <align>left</align>
+            <text>%20%20%20%20%20%20eventType%20%20%3A%20String%0A%20%20%20%20%20eventName%20%20%3A%20String%0A%20%20%20%20%20%20subscriber%20%20%3A%20String%0A%20expirationDate%20%20%3A%20DateTime</text>
+          </controlProperties>
+        </control>
+      </groupChildrenDescriptors>
+    </control>
+    <control controlID="14" controlTypeID="com.balsamiq.mockups::Label" x="1263" y="282" w="-1" h="-1" measuredW="119" measuredH="21" zOrder="13" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20user@mail.com</text>
+      </controlProperties>
+    </control>
+    <control controlID="15" controlTypeID="com.balsamiq.mockups::DataGrid" x="1263" y="303" w="312" h="93" measuredW="313" measuredH="84" zOrder="14" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20eventName%2C%20Map%3CString%5C%2CSubscription%3E%0ARegisteredTaskEvent%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A05%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="16" controlTypeID="com.balsamiq.mockups::DataGrid" x="1644" y="306" w="315" h="94" measuredW="290" measuredH="84" zOrder="15" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20subscriber%2C%20Map%3CString%5C%2CSubscription%3E%0Auser@mail.com%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A05%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="17" controlTypeID="com.balsamiq.mockups::Label" x="1646" y="282" w="-1" h="-1" measuredW="91" measuredH="21" zOrder="16" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20eventType</text>
+      </controlProperties>
+    </control>
+    <control controlID="18" controlTypeID="com.balsamiq.mockups::Arrow" x="557" y="308" w="539" h="10" measuredW="150" measuredH="100" zOrder="17" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="19" controlTypeID="com.balsamiq.mockups::Label" x="794" y="289" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="18" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="20" controlTypeID="com.balsamiq.mockups::Arrow" x="136" y="308" w="415" h="10" measuredW="150" measuredH="100" zOrder="19" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <size>12</size>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="21" controlTypeID="com.balsamiq.mockups::Label" x="309" y="289" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="20" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="23" controlTypeID="com.balsamiq.mockups::Arrow" x="136" y="462" w="419" h="10" measuredW="150" measuredH="100" zOrder="21" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="24" controlTypeID="com.balsamiq.mockups::Label" x="299" y="441" w="-1" h="-1" measuredW="66" measuredH="21" zOrder="22" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>keepAlive%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="25" controlTypeID="com.balsamiq.mockups::Arrow" x="551" y="462" w="539" h="10" measuredW="150" measuredH="100" zOrder="23" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="26" controlTypeID="com.balsamiq.mockups::Label" x="730" y="441" w="-1" h="-1" measuredW="202" measuredH="21" zOrder="24" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>findSubscriptions%28user@mail.com%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="27" controlTypeID="com.balsamiq.mockups::Arrow" x="556" y="499" w="539" h="10" measuredW="150" measuredH="100" zOrder="25" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="28" controlTypeID="com.balsamiq.mockups::Label" x="800" y="478" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="26" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="29" controlTypeID="com.balsamiq.mockups::Label" x="448" y="514" w="-1" h="-1" measuredW="212" measuredH="21" zOrder="27" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>refreshSubscriptionExpirationTime%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="30" controlTypeID="com.balsamiq.mockups::Arrow" x="557" y="545" w="539" h="10" measuredW="150" measuredH="100" zOrder="28" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <rightArrow>true</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="31" controlTypeID="com.balsamiq.mockups::Label" x="731" y="527" w="-1" h="-1" measuredW="196" measuredH="21" zOrder="29" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>store%28Subscriptions%20subscription%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="32" controlTypeID="com.balsamiq.mockups::Label" x="1263" y="491" w="-1" h="-1" measuredW="119" measuredH="21" zOrder="30" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20user@mail.com</text>
+      </controlProperties>
+    </control>
+    <control controlID="33" controlTypeID="com.balsamiq.mockups::DataGrid" x="1644" y="513" w="315" h="94" measuredW="290" measuredH="84" zOrder="31" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20subscriber%2C%20Map%3CString%5C%2CSubscription%3E%0Auser@mail.com%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A05%3A30</text>
+      </controlProperties>
+    </control>
+    <control controlID="34" controlTypeID="com.balsamiq.mockups::Label" x="1646" y="489" w="-1" h="-1" measuredW="91" measuredH="21" zOrder="32" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20eventType</text>
+      </controlProperties>
+    </control>
+    <control controlID="35" controlTypeID="com.balsamiq.mockups::DataGrid" x="1263" y="512" w="312" h="93" measuredW="313" measuredH="84" zOrder="33" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20eventName%2C%20Map%3CString%5C%2CSubscription%3E%0ARegisteredTaskEvent%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A05%3A30</text>
+      </controlProperties>
+    </control>
+    <control controlID="36" controlTypeID="com.balsamiq.mockups::Arrow" x="551" y="597" w="539" h="10" measuredW="150" measuredH="100" zOrder="34" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="37" controlTypeID="com.balsamiq.mockups::Label" x="789" y="578" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="35" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="38" controlTypeID="com.balsamiq.mockups::Arrow" x="138" y="597" w="415" h="10" measuredW="150" measuredH="100" zOrder="36" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="39" controlTypeID="com.balsamiq.mockups::Label" x="299" y="578" w="64" h="-1" measuredW="60" measuredH="21" zOrder="37" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="44" controlTypeID="com.balsamiq.mockups::Label" x="431" y="1080" w="-1" h="-1" measuredW="235" measuredH="21" zOrder="38" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>pushEvent%28RegisteredTaskEvent%20event%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="45" controlTypeID="com.balsamiq.mockups::Arrow" x="558" y="1119" w="539" h="10" measuredW="150" measuredH="100" zOrder="39" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <rightArrow>true</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="46" controlTypeID="com.balsamiq.mockups::Label" x="675" y="1101" w="-1" h="-1" measuredW="298" measuredH="21" zOrder="40" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>findSubscriptions%28RegisteredTaskEventType%20type%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="47" controlTypeID="com.balsamiq.mockups::Arrow" x="560" y="1198" w="539" h="10" measuredW="150" measuredH="100" zOrder="41" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="48" controlTypeID="com.balsamiq.mockups::Label" x="803" y="1178" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="42" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="49" controlTypeID="com.balsamiq.mockups::Arrow" x="143" y="1198" w="409" h="10" measuredW="150" measuredH="100" zOrder="43" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="50" controlTypeID="com.balsamiq.mockups::Label" x="233" y="1176" w="-1" h="-1" measuredW="235" measuredH="21" zOrder="44" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>pushEvent%28RegisteredTaskEvent%20event%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="51" controlTypeID="com.balsamiq.mockups::Label" x="944" y="1136" w="-1" h="-1" measuredW="298" measuredH="21" zOrder="45" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>findSubscriptions%28RegisteredTaskEventType%20type%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="52" controlTypeID="com.balsamiq.mockups::Label" x="981" y="1160" w="-1" h="-1" measuredW="213" measuredH="21" zOrder="46" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>isExpired%28Subscription%20subscription%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="53" controlTypeID="com.balsamiq.mockups::Label" x="1264" y="1089" w="-1" h="-1" measuredW="119" measuredH="21" zOrder="47" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20user@mail.com</text>
+      </controlProperties>
+    </control>
+    <control controlID="54" controlTypeID="com.balsamiq.mockups::DataGrid" x="1645" y="1111" w="315" h="94" measuredW="290" measuredH="84" zOrder="48" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20subscriber%2C%20Map%3CString%5C%2CSubscription%3E%0Auser@mail.com%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A06%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="55" controlTypeID="com.balsamiq.mockups::Label" x="1647" y="1087" w="-1" h="-1" measuredW="91" measuredH="21" zOrder="49" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20eventType</text>
+      </controlProperties>
+    </control>
+    <control controlID="56" controlTypeID="com.balsamiq.mockups::DataGrid" x="1264" y="1110" w="312" h="93" measuredW="313" measuredH="84" zOrder="50" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20eventName%2C%20Map%3CString%5C%2CSubscription%3E%0ARegisteredTaskEvent%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A06%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="59" controlTypeID="com.balsamiq.mockups::Arrow" x="139" y="1361" w="419" h="10" measuredW="150" measuredH="100" zOrder="51" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="60" controlTypeID="com.balsamiq.mockups::Label" x="302" y="1340" w="-1" h="-1" measuredW="66" measuredH="21" zOrder="52" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>keepAlive%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="61" controlTypeID="com.balsamiq.mockups::Arrow" x="554" y="1361" w="539" h="10" measuredW="150" measuredH="100" zOrder="53" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="62" controlTypeID="com.balsamiq.mockups::Label" x="715" y="1340" w="-1" h="-1" measuredW="202" measuredH="21" zOrder="54" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>findSubscriptions%28user@mail.com%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="63" controlTypeID="com.balsamiq.mockups::Arrow" x="559" y="1398" w="539" h="10" measuredW="150" measuredH="100" zOrder="55" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="64" controlTypeID="com.balsamiq.mockups::Label" x="797" y="1377" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="56" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="65" controlTypeID="com.balsamiq.mockups::Label" x="445" y="1413" w="-1" h="-1" measuredW="212" measuredH="21" zOrder="57" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>refreshSubscriptionExpirationTime%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="66" controlTypeID="com.balsamiq.mockups::Arrow" x="558" y="1444" w="539" h="10" measuredW="150" measuredH="100" zOrder="58" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <rightArrow>true</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="67" controlTypeID="com.balsamiq.mockups::Label" x="734" y="1426" w="-1" h="-1" measuredW="196" measuredH="21" zOrder="59" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>store%28Subscriptions%20subscription%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="68" controlTypeID="com.balsamiq.mockups::Label" x="1264" y="1413" w="-1" h="-1" measuredW="119" measuredH="21" zOrder="60" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20user@mail.com</text>
+      </controlProperties>
+    </control>
+    <control controlID="69" controlTypeID="com.balsamiq.mockups::DataGrid" x="1264" y="1434" w="312" h="93" measuredW="313" measuredH="84" zOrder="61" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20eventName%2C%20Map%3CString%5C%2CSubscription%3E%0ARegisteredTaskEvent%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A07%3A30</text>
+      </controlProperties>
+    </control>
+    <control controlID="70" controlTypeID="com.balsamiq.mockups::DataGrid" x="1645" y="1437" w="315" h="94" measuredW="290" measuredH="84" zOrder="62" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20subscriber%2C%20Map%3CString%5C%2CSubscription%3E%0Auser@mail.com%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A07%3A30</text>
+      </controlProperties>
+    </control>
+    <control controlID="71" controlTypeID="com.balsamiq.mockups::Label" x="1647" y="1413" w="-1" h="-1" measuredW="91" measuredH="21" zOrder="63" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20eventType</text>
+      </controlProperties>
+    </control>
+    <control controlID="72" controlTypeID="com.balsamiq.mockups::Arrow" x="552" y="1499" w="539" h="10" measuredW="150" measuredH="100" zOrder="64" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="73" controlTypeID="com.balsamiq.mockups::Label" x="790" y="1480" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="65" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="74" controlTypeID="com.balsamiq.mockups::Arrow" x="139" y="1499" w="415" h="10" measuredW="150" measuredH="100" zOrder="66" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="75" controlTypeID="com.balsamiq.mockups::Label" x="300" y="1480" w="64" h="-1" measuredW="60" measuredH="21" zOrder="67" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="97" controlTypeID="com.balsamiq.mockups::Arrow" x="139" y="763" w="419" h="10" measuredW="150" measuredH="100" zOrder="68" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="98" controlTypeID="com.balsamiq.mockups::Label" x="302" y="742" w="-1" h="-1" measuredW="66" measuredH="21" zOrder="69" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>keepAlive%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="99" controlTypeID="com.balsamiq.mockups::Arrow" x="554" y="763" w="539" h="10" measuredW="150" measuredH="100" zOrder="70" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <stroke>solid</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="100" controlTypeID="com.balsamiq.mockups::Label" x="715" y="742" w="-1" h="-1" measuredW="202" measuredH="21" zOrder="71" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>findSubscriptions%28user@mail.com%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="101" controlTypeID="com.balsamiq.mockups::Arrow" x="559" y="800" w="539" h="10" measuredW="150" measuredH="100" zOrder="72" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="102" controlTypeID="com.balsamiq.mockups::Label" x="797" y="779" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="73" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="103" controlTypeID="com.balsamiq.mockups::Label" x="445" y="815" w="-1" h="-1" measuredW="212" measuredH="21" zOrder="74" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>refreshSubscriptionExpirationTime%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="104" controlTypeID="com.balsamiq.mockups::Arrow" x="560" y="846" w="539" h="10" measuredW="150" measuredH="100" zOrder="75" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>false</leftArrow>
+        <rightArrow>true</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="105" controlTypeID="com.balsamiq.mockups::Label" x="734" y="828" w="-1" h="-1" measuredW="196" measuredH="21" zOrder="76" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>store%28Subscriptions%20subscription%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="106" controlTypeID="com.balsamiq.mockups::Label" x="1264" y="767" w="-1" h="-1" measuredW="119" measuredH="21" zOrder="77" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20user@mail.com</text>
+      </controlProperties>
+    </control>
+    <control controlID="107" controlTypeID="com.balsamiq.mockups::DataGrid" x="1264" y="788" w="312" h="93" measuredW="313" measuredH="84" zOrder="78" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20eventName%2C%20Map%3CString%5C%2CSubscription%3E%0ARegisteredTaskEvent%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A06%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="108" controlTypeID="com.balsamiq.mockups::DataGrid" x="1645" y="791" w="315" h="94" measuredW="290" measuredH="84" zOrder="79" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>String%20subscriber%2C%20Map%3CString%5C%2CSubscription%3E%0Auser@mail.com%2C%20%20RegisteredTaskEvent%5Cn%20RegisteredTaskEventType%5Cn%20user@mail.com%5Cn%209%3A06%3A00</text>
+      </controlProperties>
+    </control>
+    <control controlID="109" controlTypeID="com.balsamiq.mockups::Label" x="1647" y="767" w="-1" h="-1" measuredW="91" measuredH="21" zOrder="80" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Key%3A%20eventType</text>
+      </controlProperties>
+    </control>
+    <control controlID="110" controlTypeID="com.balsamiq.mockups::Arrow" x="552" y="903" w="539" h="10" measuredW="150" measuredH="100" zOrder="81" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="111" controlTypeID="com.balsamiq.mockups::Label" x="790" y="884" w="-1" h="-1" measuredW="60" measuredH="21" zOrder="82" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="112" controlTypeID="com.balsamiq.mockups::Arrow" x="139" y="903" w="415" h="10" measuredW="150" measuredH="100" zOrder="83" locked="false" isInGroup="-1">
+      <controlProperties>
+        <backgroundAlpha>1</backgroundAlpha>
+        <curvature>0</curvature>
+        <leftArrow>true</leftArrow>
+        <rightArrow>false</rightArrow>
+        <stroke>dashed</stroke>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="113" controlTypeID="com.balsamiq.mockups::Label" x="300" y="884" w="64" h="-1" measuredW="60" measuredH="21" zOrder="84" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>success%28%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="116" controlTypeID="com.balsamiq.mockups::Icon" x="1451" y="576" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="85" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="117" controlTypeID="com.balsamiq.mockups::Icon" x="1820" y="576" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="86" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="118" controlTypeID="com.balsamiq.mockups::Icon" x="1453" y="852" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="87" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="119" controlTypeID="com.balsamiq.mockups::Icon" x="1822" y="856" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="88" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="120" controlTypeID="com.balsamiq.mockups::Icon" x="1453" y="1498" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="89" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="121" controlTypeID="com.balsamiq.mockups::Icon" x="1820" y="1502" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="90" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>40463</color>
+        <icon>DownFillTriangleIcon%7Cxsmall</icon>
+        <rotation>180</rotation>
+      </controlProperties>
+    </control>
+    <control controlID="123" controlTypeID="com.balsamiq.mockups::VCurly" x="101" y="278" w="31" h="325" measuredW="180" measuredH="140" zOrder="91" locked="false" isInGroup="-1">
+      <controlProperties>
+        <direction>right</direction>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="127" controlTypeID="com.balsamiq.mockups::Label" x="19" y="414" w="-1" h="-1" measuredW="88" measuredH="53" zOrder="92" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>Client%20is%20active%5CnTime%20Interval%3A%5Cn%5Bt%2C%20t+30sec%5D</text>
+      </controlProperties>
+    </control>
+    <control controlID="130" controlTypeID="com.balsamiq.mockups::VCurly" x="102" y="472" w="31" h="436" measuredW="180" measuredH="140" zOrder="93" locked="false" isInGroup="-1">
+      <controlProperties>
+        <direction>right</direction>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="131" controlTypeID="com.balsamiq.mockups::Label" x="19" y="664" w="-1" h="-1" measuredW="88" measuredH="53" zOrder="94" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>Client%20is%20active%5CnTime%20Interval%3A%5Cn%5Bt%2C%20t+30sec%5D</text>
+      </controlProperties>
+    </control>
+    <control controlID="134" controlTypeID="com.balsamiq.mockups::VCurly" x="102" y="763" w="31" h="603" measuredW="180" measuredH="140" zOrder="95" locked="false" isInGroup="-1">
+      <controlProperties>
+        <direction>right</direction>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="135" controlTypeID="com.balsamiq.mockups::Label" x="19" y="1029" w="88" h="-1" measuredW="88" measuredH="53" zOrder="96" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>13</size>
+        <text>Client%20is%20active%5CnTime%20Interval%3A%5Cn%5Bt%2C%20t+30sec%5D</text>
+      </controlProperties>
+    </control>
+  </controls>
+</mockup>
