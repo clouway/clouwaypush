@@ -45,8 +45,8 @@ class PushChannelGinModule extends AbstractGinModule {
   @Provides
   @Singleton
   @Inject
-  public KeepAliveTimer getImAliveTimer(@KeepAliveTimeInterval int timeInterval) {
-    return new KeepAliveTimerImpl(timeInterval);
+  public KeepAliveTimer getImAliveTimer(@KeepAliveTimeInterval int timeIntervalInSeconds) {
+    return new KeepAliveTimerImpl(timeIntervalInSeconds);
   }
 
   @Provides
