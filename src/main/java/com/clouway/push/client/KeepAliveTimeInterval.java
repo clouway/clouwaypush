@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * KeepAliveTimeInterval class is used in the {@link com.clouway.push.client.ChannelGinModule}
+ * KeepAliveTimeInterval class is used in the {@link com.clouway.push.client.PushChannelGinModule}
  * for configuring the time interval between each periodic request that the client sends
  * to the server in order to notify him that is still active.
  *
