@@ -285,7 +285,7 @@ public class ChannelApiPushEventBusTest {
   }
 
   @Test
-  public void shouldNotOpenMoreThanOneChanelPerSubscriber() throws Exception {
+  public void onlyOneChannelIsOpenedPerSubscriber() throws Exception {
 
     context.checking(new Expectations() {{
 
