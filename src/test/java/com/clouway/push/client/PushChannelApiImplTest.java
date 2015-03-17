@@ -53,8 +53,6 @@ public class PushChannelApiImplTest {
 
   private InstanceCapture<TimerAction> timerAction = new InstanceCapture<TimerAction>();
 
-  final AsyncConnectCallbackImpl connectCallback = new AsyncConnectCallbackImpl();
-
   final InstanceCapture<ChannelListener> channelListener = new InstanceCapture<ChannelListener>();
 
   final List<Integer> subscribeRequestSecondsRetries = new ArrayList<Integer>();
@@ -313,7 +311,7 @@ public class PushChannelApiImplTest {
     pushChannel.unsubscribe(event.TYPE, unsubscribeCallback);
     asyncAction.onSuccess(null);
 
-    context.checking(new Expectations(){{
+    context.checking(new Expectations() {{
       never(timer);
       never(pushChannelServiceAsync);
     }});
@@ -329,7 +327,7 @@ public class PushChannelApiImplTest {
       will(asyncAction);
     }});
 
-    pushChannel.connect(connectCallback);
+    pushChannel.connect();
     assertTrue(pushChannel.hasInitialConnection());
   }
 
@@ -345,11 +343,10 @@ public class PushChannelApiImplTest {
       oneOf(channel).open(with("channelToken"), with(channelListener));
     }});
 
-    pushChannel.connect(connectCallback);
+    pushChannel.connect();
     asyncAction.onSuccess("channelToken");
 
     assertTrue(pushChannel.hasInitialConnection());
-    assertThat(connectCallback.timesCalled, is(1));
   }
 
   @Test
@@ -364,7 +361,7 @@ public class PushChannelApiImplTest {
       oneOf(channel).open(with("channelToken"), with(channelListener));
     }});
 
-    pushChannel.connect(connectCallback);
+    pushChannel.connect();
     asyncAction.onSuccess("channelToken");
 
     context.checking(new Expectations() {{
@@ -378,16 +375,6 @@ public class PushChannelApiImplTest {
     asyncAction.onSuccess("newChannelToken");
 
     assertTrue(pushChannel.hasInitialConnection());
-    assertThat(connectCallback.timesCalled, is(1));
-  }
-
-  private class AsyncConnectCallbackImpl implements AsyncConnectCallback {
-
-    int timesCalled = 0;
-
-    public void onConnect() {
-      timesCalled++;
-    }
   }
 
   private class AsyncUnsubscribeCallbackImpl implements AsyncUnsubscribeCallBack {

@@ -42,11 +42,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
     if (!pushChannelApi.hasInitialConnection()) {
 
-      pushChannelApi.connect(new AsyncConnectCallback() {
-
-        public void onConnect() {
-        }
-      });
+      pushChannelApi.connect();
 
     }
 

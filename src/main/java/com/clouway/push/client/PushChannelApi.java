@@ -10,7 +10,7 @@ public interface PushChannelApi extends OnTimeCallBack {
 
   boolean hasInitialConnection();
 
-  void connect(AsyncConnectCallback callback);
+  void connect();
 
   void subscribe(PushEvent.Type type, AsyncSubscribeCallback callback);
 

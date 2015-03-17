@@ -61,26 +61,9 @@ public class PushChannelApiImpl implements PushChannelApi {
   }
 
   @Override
-  public void connect(final AsyncConnectCallback connectCallback) {
+  public void connect() {
     initialConnection = true;
-    establishNewConnection(connectCallback);
-  }
-
-  private void establishNewConnection(final AsyncConnectCallback connectCallback) {
-
-    pushChannelServiceAsync.connect(subscriber.get(), new AsyncCallback<String>() {
-
-      @Override
-      public void onFailure(Throwable caught) {
-      }
-
-      @Override
-      public void onSuccess(String channelToken) {
-
-        openChannel(channelToken);
-        connectCallback.onConnect();
-      }
-    });
+    establishNewConnection();
   }
 
   private void establishNewConnection() {
