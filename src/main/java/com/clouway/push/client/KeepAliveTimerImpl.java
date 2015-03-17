@@ -7,37 +7,44 @@ import com.google.gwt.user.client.Timer;
  */
 public class KeepAliveTimerImpl implements KeepAliveTimer {
 
-  private Timer timer;
+  private final int keepAliveSeconds;
+  private final int reconnectSeconds;
 
-  private final int seconds;
-
-  public KeepAliveTimerImpl(int seconds) {
-    this.seconds = seconds;
+  public KeepAliveTimerImpl(int keepAliveSeconds, int reconnectSeconds) {
+    this.keepAliveSeconds = keepAliveSeconds;
+    this.reconnectSeconds = reconnectSeconds;
   }
 
   public void onTime(final OnTimeCallBack callback){
-    timer = new Timer() {
+    Timer timer = new Timer() {
       @Override
       public void run() {
         callback.onTime();
       }
     };
-    timer.scheduleRepeating(seconds * 1000);
+    timer.scheduleRepeating(keepAliveSeconds * 1000);
+  }
+
+  @Override
+  public void reconnect(final ChanelReconnectScheduler scheduler) {
+    Timer timer = new Timer() {
+      @Override
+      public void run() {
+        scheduler.reconnect();
+      }
+    };
+    timer.schedule(reconnectSeconds * 1000);
   }
 
   @Override
   public void scheduleAction(int seconds, final TimerAction action) {
 
-    timer = new Timer() {
+    Timer timer = new Timer() {
       @Override
       public void run() {
         action.execute();
       }
     };
     timer.schedule(seconds * 1000);
-  }
-
-  public int getSeconds() {
-    return seconds;
   }
 }

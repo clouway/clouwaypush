@@ -6,11 +6,11 @@ import com.clouway.push.shared.PushEvent;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public interface PushChannelApi extends OnTimeCallBack {
+public interface PushChannelApi extends OnTimeCallBack, ChanelReconnectScheduler {
 
-  boolean hasOpenedChannel();
+  boolean hasInitialConnection();
 
-  void connect(AsyncConnectCallback callback);
+  void connect();
 
   void subscribe(PushEvent.Type type, AsyncSubscribeCallback callback);
 
