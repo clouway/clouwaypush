@@ -33,6 +33,8 @@ public class ChannelApiPushEventBusTest {
 
   private SimpleEvent event = new SimpleEvent();
   private SimpleEventHandler eventHandler = new SimpleEventHandler();
+
+  private SimpleEvent anotherEvent = new SimpleEvent();
   private SimpleEventHandler anotherEventHandler = new SimpleEventHandler();
 
   private InstanceCapture<AsyncConnectCallback> connectCallback = new InstanceCapture<AsyncConnectCallback>();
@@ -52,10 +54,10 @@ public class ChannelApiPushEventBusTest {
   }
 
   @Test
-  public void addHandlerForEventWhenChannelIsClosed() {
+  public void addHandlerForEventWhenChannelIsNotOpen() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(false));
 
       oneOf(pushChannelApi).connect(with(connectCallback));
@@ -71,7 +73,7 @@ public class ChannelApiPushEventBusTest {
   public void addHandlerForEventWhenChannelIsOpened() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       never(pushChannelApi).connect(with(any(AsyncConnectCallback.class)));
@@ -86,7 +88,7 @@ public class ChannelApiPushEventBusTest {
   public void removeAddedHandlerForEvent() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -106,7 +108,7 @@ public class ChannelApiPushEventBusTest {
   public void dispatchFiredEventToSingleHandler() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -124,7 +126,7 @@ public class ChannelApiPushEventBusTest {
   public void eventIsNotDispatchedToRemovedHandler() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -147,7 +149,7 @@ public class ChannelApiPushEventBusTest {
   public void addTwoHandlersForSameEvent() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -157,7 +159,7 @@ public class ChannelApiPushEventBusTest {
     subscribeCallback.getValue().onSuccess();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       never(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
@@ -170,7 +172,7 @@ public class ChannelApiPushEventBusTest {
   public void dispatchFiredEventToTwoHandlers() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -180,7 +182,7 @@ public class ChannelApiPushEventBusTest {
     subscribeCallback.getValue().onSuccess();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       never(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
@@ -198,7 +200,7 @@ public class ChannelApiPushEventBusTest {
   public void addTwoHandlersForEventRemoveOnlyOneOfThem() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -208,7 +210,7 @@ public class ChannelApiPushEventBusTest {
     subscribeCallback.getValue().onSuccess();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       never(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
@@ -227,7 +229,7 @@ public class ChannelApiPushEventBusTest {
   public void addTwoHandlersForEventRemoveAllOfThem() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -237,7 +239,7 @@ public class ChannelApiPushEventBusTest {
     subscribeCallback.getValue().onSuccess();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       never(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
@@ -258,7 +260,7 @@ public class ChannelApiPushEventBusTest {
   public void addHandlerAfterRemovingAllHandlersForEvent() {
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
@@ -275,13 +277,35 @@ public class ChannelApiPushEventBusTest {
     unsubscribeCallback.getValue().onSuccess();
 
     context.checking(new Expectations() {{
-      oneOf(pushChannelApi).hasOpenedChannel();
+      oneOf(pushChannelApi).hasInitialConnection();
       will(returnValue(true));
 
       oneOf(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
     }});
 
     pushEventBus.addHandler(event.TYPE, eventHandler);
+  }
+
+  @Test
+  public void shouldNotOpenMoreThanOneChanelPerSubscriber() throws Exception {
+
+    context.checking(new Expectations() {{
+
+      //add first event
+      oneOf(pushChannelApi).hasInitialConnection();
+      will(returnValue(false));
+      oneOf(pushChannelApi).connect(with(any(AsyncConnectCallback.class)));
+      oneOf(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
+
+      //add second event
+      oneOf(pushChannelApi).hasInitialConnection();
+      will(returnValue(true));
+      oneOf(pushChannelApi).subscribe(with(anotherEvent.TYPE), with(any(AsyncSubscribeCallback.class)));
+
+    }});
+
+    pushEventBus.addHandler(event.TYPE, eventHandler);
+    pushEventBus.addHandler(anotherEvent.TYPE, anotherEventHandler);
   }
 
   public class SimpleEventHandler implements PushEventHandler {

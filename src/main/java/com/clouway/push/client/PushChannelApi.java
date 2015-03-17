@@ -8,7 +8,7 @@ import com.clouway.push.shared.PushEvent;
  */
 public interface PushChannelApi extends OnTimeCallBack {
 
-  boolean hasOpenedChannel();
+  boolean hasInitialConnection();
 
   void connect(AsyncConnectCallback callback);
 

@@ -27,7 +27,11 @@ public class PushChannelApiImpl implements PushChannelApi {
   private Provider<List<Integer>> unsubscribeRequestSecondsRetries;
   private Provider<List<Integer>> keepAliveRequestSecondsRetries;
 
-  private boolean openedChannel = false;
+  //Marker which indicate that already is made request for open of connection.
+  //It can be used for prevent sending second async request for open of connection while
+  // waiting response of first async request.
+  private boolean initialConnection = false;
+
   private int subscriptionsCount;
   private PushEventListener listener;
 
@@ -52,12 +56,13 @@ public class PushChannelApiImpl implements PushChannelApi {
   }
 
   @Override
-  public boolean hasOpenedChannel() {
-    return openedChannel;
+  public boolean hasInitialConnection() {
+    return initialConnection;
   }
 
   @Override
   public void connect(final AsyncConnectCallback connectCallback) {
+    initialConnection = true;
     establishNewConnection(connectCallback);
   }
 
@@ -73,8 +78,6 @@ public class PushChannelApiImpl implements PushChannelApi {
       public void onSuccess(String channelToken) {
 
         openChannel(channelToken);
-
-        openedChannel = true;
         connectCallback.onConnect();
       }
     });
