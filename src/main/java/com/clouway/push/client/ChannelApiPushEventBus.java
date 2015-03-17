@@ -50,7 +50,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
     }
 
-    //subscription for request is independent from opening of channel
+    //subscription for event is independent from opening of channel
     subscribeForEvent(type, handlerRegistration, handler);
 
 
