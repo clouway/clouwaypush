@@ -7,7 +7,7 @@ public interface KeepAliveTimer {
 
   void onTime(OnTimeCallBack callBack);
 
-  int getSeconds();
+  void reconnect(ChanelReconnectScheduler scheduler);
 
   void scheduleAction(int seconds, TimerAction action);
 }

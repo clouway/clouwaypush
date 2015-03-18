@@ -11,8 +11,11 @@ public abstract class PushChannelClientModule extends AbstractGinModule {
   protected void configure() {
 
     bindConstant().annotatedWith(KeepAliveTimeInterval.class).to(getKeepAliveTimeInterval());
+    bindConstant().annotatedWith(ChanelReconnectTimeInterval.class).to(getReconnectTimeInterval());
     install(new PushChannelGinModule());
   }
 
   public abstract int getKeepAliveTimeInterval();
+
+  public abstract int getReconnectTimeInterval();
 }

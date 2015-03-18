@@ -364,6 +364,22 @@ public class PushChannelApiImplTest {
   }
 
   @Test
+  public void retryToOpenConnection() throws Exception {
+    final AsyncAction<String> asyncAction = new AsyncAction<String>();
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).connect(with(subscriber), with(any(AsyncCallback.class)));
+      will(asyncAction);
+
+      oneOf(timer).reconnect(pushChannel);
+
+    }});
+
+    pushChannel.connect();
+    asyncAction.onFailure(new RuntimeException());
+  }
+
+  @Test
   public void reopenChannelWhenTokenExpires() {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();

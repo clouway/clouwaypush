@@ -6,7 +6,7 @@ import com.clouway.push.shared.PushEvent;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public interface PushChannelApi extends OnTimeCallBack {
+public interface PushChannelApi extends OnTimeCallBack, ChanelReconnectScheduler {
 
   boolean hasInitialConnection();
 

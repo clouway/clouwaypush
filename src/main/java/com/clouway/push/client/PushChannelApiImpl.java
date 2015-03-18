@@ -68,76 +68,9 @@ public class PushChannelApiImpl implements PushChannelApi {
     }
   }
 
-  private void establishNewConnection() {
-
-    pushChannelServiceAsync.connect(subscriber.get(), new AsyncCallback<String>() {
-
-      public void onFailure(Throwable caught) {
-      }
-
-      public void onSuccess(String channelToken) {
-        openChannel(channelToken);
-      }
-    });
-  }
-
-  private void openChannel(String channelToken) {
-
-    channel.open(channelToken, new ChannelListener() {
-
-      @Override
-      public void onMessage(String json) {
-        try {
-          SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
-          PushEvent pushEvent = (PushEvent) reader.readObject();
-          listener.onPushEvent(pushEvent);
-        } catch (SerializationException e) {
-          throw new RuntimeException("Unable to deserialize " + json, e);
-        }
-      }
-
-      @Override
-      public void onTokenExpire() {
-        establishNewConnection();
-      }
-    });
-  }
-
   @Override
   public void subscribe(final PushEvent.Type type, final AsyncSubscribeCallback callback) {
     subscribeForEvent(0, subscribeRequestSecondsRetries.get(), type, callback);
-  }
-
-  private void subscribeForEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncSubscribeCallback callback) {
-
-    pushChannelServiceAsync.subscribe(subscriber.get(), type, new AsyncCallback<Void>() {
-
-      @Override
-      public void onFailure(Throwable caught) {
-
-        if (position < secondsRetries.size()) {
-
-          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
-
-            @Override
-            public void execute() {
-              int nextPosition = position + 1;
-              subscribeForEvent(nextPosition, secondsRetries, type, callback);
-            }
-          });
-
-        } else {
-          throw new UnableToSubscribeForEventException();
-
-        }
-      }
-
-      @Override
-      public void onSuccess(Void result) {
-        increaseSubscriptionsCount();
-        callback.onSuccess();
-      }
-    });
   }
 
   @Override
@@ -145,39 +78,19 @@ public class PushChannelApiImpl implements PushChannelApi {
     unsubscribeFromEvent(0, unsubscribeRequestSecondsRetries.get(), type, callback);
   }
 
-  private void unsubscribeFromEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncUnsubscribeCallBack callback) {
-
-    pushChannelServiceAsync.unsubscribe(subscriber.get(), type, new AsyncCallback<Void>() {
-
-      @Override
-      public void onFailure(Throwable caught) {
-
-        if (position < secondsRetries.size()) {
-
-          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
-
-            @Override
-            public void execute() {
-              int nextPosition = position + 1;
-              unsubscribeFromEvent(nextPosition, secondsRetries, type, callback);
-            }
-          });
-        } else {
-          throw new UnableToUnsubscribeFromEventException();
-        }
-      }
-
-      @Override
-      public void onSuccess(Void result) {
-        decreaseSubscriptionsCount();
-        callback.onSuccess();
-      }
-    });
-  }
-
   @Override
   public void onTime() {
     onTime(0, keepAliveRequestSecondsRetries.get());
+  }
+
+  @Override
+  public void reconnect() {
+    establishNewConnection();
+  }
+
+  @Override
+  public void addPushEventListener(PushEventListener listener) {
+    this.listener = listener;
   }
 
   private void onTime(final int position, final List<Integer> secondsRetries) {
@@ -225,8 +138,101 @@ public class PushChannelApiImpl implements PushChannelApi {
     subscriptionsCount++;
   }
 
-  @Override
-  public void addPushEventListener(PushEventListener listener) {
-    this.listener = listener;
+  private void unsubscribeFromEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncUnsubscribeCallBack callback) {
+
+    pushChannelServiceAsync.unsubscribe(subscriber.get(), type, new AsyncCallback<Void>() {
+
+      @Override
+      public void onFailure(Throwable caught) {
+
+        if (position < secondsRetries.size()) {
+
+          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
+
+            @Override
+            public void execute() {
+              int nextPosition = position + 1;
+              unsubscribeFromEvent(nextPosition, secondsRetries, type, callback);
+            }
+          });
+        } else {
+          throw new UnableToUnsubscribeFromEventException();
+        }
+      }
+
+      @Override
+      public void onSuccess(Void result) {
+        decreaseSubscriptionsCount();
+        callback.onSuccess();
+      }
+    });
+  }
+
+  private void subscribeForEvent(final int position, final List<Integer> secondsRetries, final PushEvent.Type type, final AsyncSubscribeCallback callback) {
+
+    pushChannelServiceAsync.subscribe(subscriber.get(), type, new AsyncCallback<Void>() {
+
+      @Override
+      public void onFailure(Throwable caught) {
+
+        if (position < secondsRetries.size()) {
+
+          timer.scheduleAction(secondsRetries.get(position), new TimerAction() {
+
+            @Override
+            public void execute() {
+              int nextPosition = position + 1;
+              subscribeForEvent(nextPosition, secondsRetries, type, callback);
+            }
+          });
+
+        } else {
+          throw new UnableToSubscribeForEventException();
+
+        }
+      }
+
+      @Override
+      public void onSuccess(Void result) {
+        increaseSubscriptionsCount();
+        callback.onSuccess();
+      }
+    });
+  }
+
+  private void establishNewConnection() {
+
+    pushChannelServiceAsync.connect(subscriber.get(), new AsyncCallback<String>() {
+
+      public void onFailure(Throwable caught) {
+        timer.reconnect(PushChannelApiImpl.this);
+      }
+
+      public void onSuccess(String channelToken) {
+        openChannel(channelToken);
+      }
+    });
+  }
+
+  private void openChannel(String channelToken) {
+
+    channel.open(channelToken, new ChannelListener() {
+
+      @Override
+      public void onMessage(String json) {
+        try {
+          SerializationStreamReader reader = ((SerializationStreamFactory) pushChannelServiceAsync).createStreamReader(json);
+          PushEvent pushEvent = (PushEvent) reader.readObject();
+          listener.onPushEvent(pushEvent);
+        } catch (SerializationException e) {
+          throw new RuntimeException("Unable to deserialize " + json, e);
+        }
+      }
+
+      @Override
+      public void onTokenExpire() {
+        establishNewConnection();
+      }
+    });
   }
 }
