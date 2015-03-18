@@ -40,11 +40,7 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
     final HandlerRegistration[] handlerRegistration = {null};
 
-    if (!pushChannelApi.hasInitialConnection()) {
-
-      pushChannelApi.connect();
-
-    }
+    pushChannelApi.connect();
 
     //subscription for event is independent from opening of channel
     subscribeForEvent(type, handlerRegistration, handler);

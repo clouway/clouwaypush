@@ -350,6 +350,20 @@ public class PushChannelApiImplTest {
   }
 
   @Test
+  public void onlyOneChannelIsOpenedPerSubscriber() throws Exception {
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelServiceAsync).connect(with(subscriber), with(any(AsyncCallback.class)));
+      will(asyncAction);
+    }});
+
+    pushChannel.connect();
+    pushChannel.connect();
+
+    assertTrue(pushChannel.hasInitialConnection());
+  }
+
+  @Test
   public void reopenChannelWhenTokenExpires() {
 
     final AsyncAction<String> asyncAction = new AsyncAction<String>();

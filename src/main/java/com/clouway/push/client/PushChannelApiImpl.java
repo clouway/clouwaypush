@@ -62,8 +62,10 @@ public class PushChannelApiImpl implements PushChannelApi {
 
   @Override
   public void connect() {
-    initialConnection = true;
-    establishNewConnection();
+    if(!initialConnection) {
+      initialConnection = true;
+      establishNewConnection();
+    }
   }
 
   private void establishNewConnection() {
