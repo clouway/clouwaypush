@@ -1,6 +1,5 @@
 package com.clouway.push.client;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Timer;
 
 /**
@@ -32,7 +31,6 @@ public class KeepAliveTimerImpl implements KeepAliveTimer {
       @Override
       public void run() {
         scheduler.reconnect();
-        GWT.log("try to reconnect");
       }
     };
     timer.schedule(reconnectSeconds * 1000);
