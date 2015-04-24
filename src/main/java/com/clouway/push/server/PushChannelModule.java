@@ -1,6 +1,8 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.util.DateTime;
+import com.google.appengine.api.channel.ChannelService;
+import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.inject.AbstractModule;
@@ -54,5 +56,15 @@ public class PushChannelModule extends AbstractModule {
   @Named("MemcacheService")
   MemcacheService getMemcacheService() {
     return MemcacheServiceFactory.getMemcacheService();
+  }
+
+  @Provides
+  public Encoder getEncoder(@Named("SerializationPolicyDirectory") String serializationPolicyDirectory) {
+    return new RpcEncoder(serializationPolicyDirectory);
+  }
+
+  @Provides
+  public ChannelService getChannelService() {
+    return ChannelServiceFactory.getChannelService();
   }
 }

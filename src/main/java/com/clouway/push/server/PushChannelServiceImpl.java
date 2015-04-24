@@ -1,7 +1,7 @@
 package com.clouway.push.server;
 
-import com.clouway.push.shared.PushEvent;
 import com.clouway.push.client.channelapi.PushChannelService;
+import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -66,6 +66,8 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
 
   @Override
   public void keepAlive(String subscriber) {
+
+    log.info("Keep alive subscriber: " + subscriber);
 
     List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
     for (Subscription subscription : subscriptions) {
