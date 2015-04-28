@@ -1,12 +1,11 @@
 package com.clouway.push.client;
 
 import com.clouway.push.client.channelapi.AsyncUnsubscribeCallBack;
+import com.clouway.push.shared.HandlerRegistration;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
-import com.google.gwt.event.shared.EventBus;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,49 +15,58 @@ import java.util.Map;
  */
 public class ChannelApiPushEventBus implements PushEventBus {
 
-  private final EventBus eventBus;
+  private final EventDispatcher eventDispatcher;
   private final PushChannelApi pushChannelApi;
   private final Map<String, Integer> eventsMap = new HashMap<String, Integer>();
 
   @Inject
-  public ChannelApiPushEventBus(@Named("PushEventBus") final EventBus eventBus, PushChannelApi pushChannelApi) {
-
-    this.eventBus = eventBus;
+  public ChannelApiPushEventBus(EventDispatcher eventDispatcher, PushChannelApi pushChannelApi) {
+    this.eventDispatcher = eventDispatcher;
     this.pushChannelApi = pushChannelApi;
 
     pushChannelApi.addPushEventListener(new PushEventListener() {
 
       @Override
       public void onPushEvent(PushEvent event) {
-        eventBus.fireEvent(event);
+         fireEvent(event);
       }
     });
   }
 
   @Override
   public HandlerRegistration addHandler(final PushEvent.Type type, final PushEventHandler handler) {
+    return addHandler(type,"", handler);
+  }
+
+  @Override
+  public HandlerRegistration addHandler(final PushEvent.Type eventType, String correlationId, PushEventHandler handler) {
+
+    //transforming the default event type  using the correlationId
+    if(!Strings.isNullOrEmpty(correlationId)) {
+      eventType.setCorrelationId(correlationId);
+    }
 
     final HandlerRegistration[] handlerRegistration = {null};
 
     pushChannelApi.connect();
 
     //subscription for event is independent from opening of channel
-    subscribeForEvent(type, handlerRegistration, handler);
+    subscribeForEvent(eventType, handlerRegistration, handler);
 
 
     return new HandlerRegistration() {
 
       public void removeHandler() {
 
-        if (eventsMap.containsKey(type.getEventName())) {
+        if (eventsMap.containsKey(eventType.getKey())) {
 
-          eventsMap.put(type.getEventName(), eventsMap.get(type.getEventName()) - 1);
+          eventsMap.put(eventType.getKey(), eventsMap.get(eventType.getKey()) - 1);
 
-          if (eventsMap.get(type.getEventName()) == 0) {
+          if (eventsMap.get(eventType.getKey()) == 0) {
 
-            eventsMap.remove(type.getEventName());
+            eventsMap.remove(eventType.getKey());
 
-            pushChannelApi.unsubscribe(type, new AsyncUnsubscribeCallBack() {
+            pushChannelApi.unsubscribe(eventType, new AsyncUnsubscribeCallBack() {
 
               public void onSuccess() {
 
@@ -70,15 +78,19 @@ public class ChannelApiPushEventBus implements PushEventBus {
           }
         }
       }
-    };
+    };  }
+
+  @Override
+  public void fireEvent(PushEvent event) {
+    eventDispatcher.fire(event);
   }
 
   private void subscribeForEvent(final PushEvent.Type type, final HandlerRegistration[] handlerRegistration, final PushEventHandler handler) {
 
-    if (eventsMap.containsKey(type.getEventName())) {
+    if (eventsMap.containsKey(type.getKey())) {
 
-      handlerRegistration[0] = eventBus.addHandler(type, handler);
-      eventsMap.put(type.getEventName(), eventsMap.get(type.getEventName()) + 1);
+      handlerRegistration[0] = eventDispatcher.addHandler(type, handler);
+      eventsMap.put(type.getKey(), eventsMap.get(type.getKey()) + 1);
 
     } else {
 
@@ -86,8 +98,8 @@ public class ChannelApiPushEventBus implements PushEventBus {
 
         @Override
         public void onSuccess() {
-          handlerRegistration[0] = eventBus.addHandler(type, handler);
-          eventsMap.put(type.getEventName(), 1);
+          handlerRegistration[0] = eventDispatcher.addHandler(type, handler);
+          eventsMap.put(type.getKey(), 1);
         }
       });
     }

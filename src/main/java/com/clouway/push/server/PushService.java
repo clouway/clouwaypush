@@ -8,4 +8,6 @@ import com.clouway.push.shared.PushEvent;
 public interface PushService {
 
   void pushEvent(PushEvent event);
+
+  void pushEvent(PushEvent event, String correlationId);
 }

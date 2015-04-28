@@ -1,11 +1,9 @@
 package com.clouway.push.client;
 
 import com.clouway.push.client.channelapi.AsyncUnsubscribeCallBack;
+import com.clouway.push.shared.HandlerRegistration;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
-import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.event.shared.SimpleEventBus;
-import com.google.web.bindery.event.shared.HandlerRegistration;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
 import org.jmock.integration.junit4.JUnitRuleMockery;
@@ -29,8 +27,6 @@ public class ChannelApiPushEventBusTest {
   @Mock
   private PushChannelApi pushChannelApi;
 
-  private EventBus eventBus;
-
   private SimpleEvent event = new SimpleEvent();
   private SimpleEventHandler eventHandler = new SimpleEventHandler();
 
@@ -47,9 +43,7 @@ public class ChannelApiPushEventBusTest {
       oneOf(pushChannelApi).addPushEventListener(with(any(PushEventListener.class)));
     }});
 
-    eventBus = new SimpleEventBus();
-
-    pushEventBus = new ChannelApiPushEventBus(eventBus, pushChannelApi);
+    pushEventBus = new ChannelApiPushEventBus(new EventDispatcherImpl(), pushChannelApi);
   }
 
   @Test
@@ -93,7 +87,26 @@ public class ChannelApiPushEventBusTest {
     pushEventBus.addHandler(event.TYPE, eventHandler);
     subscribeCallback.getValue().onSuccess();
 
-    eventBus.fireEvent(event);
+
+    pushEventBus.fireEvent(event);
+
+    assertTrue(eventHandler.dispatched);
+  }
+
+  @Test
+  public void dispatchFiredEventWithCorrelationToSingleHandler() {
+
+    event.TYPE.setCorrelationId("test");
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelApi).connect();
+      oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
+    }});
+
+    pushEventBus.addHandler(event.TYPE, "test", eventHandler);
+    subscribeCallback.getValue().onSuccess();
+
+    pushEventBus.fireEvent(event);
 
     assertTrue(eventHandler.dispatched);
   }
@@ -115,7 +128,7 @@ public class ChannelApiPushEventBusTest {
     handlerRegistration.removeHandler();
     unsubscribeCallback.getValue().onSuccess();
 
-    eventBus.fireEvent(event);
+    pushEventBus.fireEvent(event);
 
     assertFalse(eventHandler.dispatched);
   }
@@ -141,6 +154,58 @@ public class ChannelApiPushEventBusTest {
   }
 
   @Test
+  public void dispatchFiredEventWithSameCorrelationToTwoHandlers() {
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelApi).connect();
+      oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
+    }});
+
+    pushEventBus.addHandler(event.TYPE, "correlationId", eventHandler);
+    subscribeCallback.getValue().onSuccess();
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelApi).connect();
+      never(pushChannelApi).subscribe(with(event.TYPE), with(any(AsyncSubscribeCallback.class)));
+    }});
+
+    pushEventBus.addHandler(event.TYPE, "correlationId", anotherEventHandler);
+
+    pushEventBus.fireEvent(event);
+
+    assertTrue(eventHandler.dispatched);
+    assertTrue(anotherEventHandler.dispatched);
+  }
+
+  @Test
+  public void dispatchFiredEventWithDifferentCorrelationToTwoHandlers() {
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelApi).connect();
+      oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
+    }});
+    pushEventBus.addHandler(event.TYPE, "correlationId", eventHandler);
+    subscribeCallback.getValue().onSuccess();
+
+
+    context.checking(new Expectations() {{
+      oneOf(pushChannelApi).connect();
+      oneOf(pushChannelApi).subscribe(with(event.TYPE), with(subscribeCallback));
+    }});
+    pushEventBus.addHandler(event.TYPE, "otherCorrelationId", anotherEventHandler);
+    subscribeCallback.getValue().onSuccess();
+
+    PushEvent pushEvent = new SimpleEvent();
+    pushEvent.getAssociatedType().setCorrelationId("correlationId");
+
+    pushEventBus.fireEvent(pushEvent);
+
+    assertTrue("not handel event", eventHandler.dispatched);
+    assertFalse("should not handle this event", anotherEventHandler.dispatched);
+  }
+
+
+  @Test
   public void dispatchFiredEventToTwoHandlers() {
 
     context.checking(new Expectations() {{
@@ -158,7 +223,7 @@ public class ChannelApiPushEventBusTest {
 
     pushEventBus.addHandler(event.TYPE, anotherEventHandler);
 
-    eventBus.fireEvent(event);
+    pushEventBus.fireEvent(event);
 
     assertTrue(eventHandler.dispatched);
     assertTrue(anotherEventHandler.dispatched);
@@ -254,6 +319,13 @@ public class ChannelApiPushEventBusTest {
   public class SimpleEvent extends PushEvent<SimpleEventHandler> {
 
     public Type<SimpleEventHandler> TYPE = new Type<SimpleEventHandler>("SimpleEvent");
+
+    public SimpleEvent() {
+    }
+
+    public SimpleEvent(Type type) {
+      TYPE = type;
+    }
 
     public Type<SimpleEventHandler> getAssociatedType() {
       return TYPE;

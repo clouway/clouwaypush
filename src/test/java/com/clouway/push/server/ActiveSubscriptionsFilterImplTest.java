@@ -3,6 +3,7 @@ package com.clouway.push.server;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
 import com.clouway.push.shared.util.DateTime;
+import com.google.common.collect.Sets;
 import com.google.inject.util.Providers;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
@@ -70,7 +71,7 @@ public class ActiveSubscriptionsFilterImplTest {
       oneOf(repository).findSubscriptions(event.TYPE);
       will(returnValue(subscriptionList));
 
-      oneOf(repository).removeSubscription(expiredSubscription);
+      oneOf(repository).removeSubscriptions(event.TYPE, Sets.newHashSet("peter@gmail.com"));
     }});
 
     List<Subscription> subscriptions = activeSubscriptionsFilter.filterSubscriptions(event.TYPE);

@@ -30,7 +30,7 @@ public class PushChannelModule extends AbstractModule {
 
     bind(PushService.class).to(PushServiceImpl.class).in(Singleton.class);
     bind(String.class).annotatedWith(Names.named("SerializationPolicyDirectory")).toInstance(serializationPolicyDirectory);
-    bind(SubscriptionsRepository.class).to(MemcachSubscriptionsRepository.class);
+    bind(SubscriptionsRepository.class).to(MemcacheSubscriptionsRepository.class);
 
     install(new ServletModule() {
       @Override
@@ -44,6 +44,12 @@ public class PushChannelModule extends AbstractModule {
   @SubscriptionsExpirationDate
   DateTime getSubscriptionExpirationDate() {
     return new DateTime().plusMills(subscriptionsExpirationMinutes * 60 * 1000);
+  }
+
+  @Provides
+  @SubscriptionsExpirationMills
+  Integer getSubscriptionExpirationMills() {
+    return subscriptionsExpirationMinutes * 60 * 1000;
   }
 
   @Provides

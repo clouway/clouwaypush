@@ -43,9 +43,9 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   @Override
   public void subscribe(String subscriber, PushEvent.Type type) {
 
-    log.info("Subscribe: " + subscriber + " for event: " + type.getEventName());
+    log.info("Subscribe: " + subscriber + " for event: " + type.getKey());
 
-    Subscription subscription = aNewSubscription().eventName(type.getEventName())
+    Subscription subscription = aNewSubscription().eventName(type.getKey())
                                                   .eventType(type)
                                                   .subscriber(subscriber)
                                                   .expirationDate(expirationDate.get())
@@ -57,7 +57,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
   @Override
   public void unsubscribe(String subscriber, PushEvent.Type eventType) {
 
-    log.info("Unsubscribe: " + subscriber + " from event: " + eventType.getEventName());
+    log.info("Unsubscribe: " + subscriber + " from event: " + eventType.getKey());
 
     if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
       subscriptionsRepository.removeSubscription(eventType, subscriber);

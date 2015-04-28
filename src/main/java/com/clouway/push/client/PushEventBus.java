@@ -1,8 +1,8 @@
 package com.clouway.push.client;
 
+import com.clouway.push.shared.HandlerRegistration;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
-import com.google.web.bindery.event.shared.HandlerRegistration;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -10,4 +10,8 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
 public interface PushEventBus {
 
   HandlerRegistration addHandler(final PushEvent.Type type, final PushEventHandler handler);
+
+  HandlerRegistration addHandler(final PushEvent.Type type,final String correlationId, final PushEventHandler handler);
+
+  void fireEvent(PushEvent event);
 }

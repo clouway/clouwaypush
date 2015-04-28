@@ -39,7 +39,7 @@ public class Subscription implements Serializable {
 
     public Builder eventType(PushEvent.Type type) {
       this.type = type;
-      eventName = type.getEventName();
+      eventName = type.getKey();
       return this;
     }
 

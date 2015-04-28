@@ -6,6 +6,12 @@ import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.tools.development.testing.LocalMemcacheServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
+import com.google.common.collect.Sets;
+import com.google.inject.util.Providers;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 import static com.clouway.push.server.Subscription.aNewSubscription;
 import static org.hamcrest.Matchers.equalTo;
@@ -14,21 +20,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public class MemcachSubscriptionsRepositoryTest {
+public class MemcacheSubscriptionsRepositoryTest {
 
   private final LocalServiceTestHelper helper = new LocalServiceTestHelper(new LocalMemcacheServiceTestConfig());
 
   private SubscriptionsRepository repository;
 
   private final String subscriber = "john@gmail.com";
+
+  private final Integer subscriptionsExpiration = 10000;
 
   private final Subscription subscription = aNewSubscription().subscriber(subscriber)
                                                               .eventType(SimpleEvent.TYPE)
@@ -43,7 +46,7 @@ public class MemcachSubscriptionsRepositoryTest {
 
     helper.setUp();
 
-    repository = new MemcachSubscriptionsRepository(MemcacheServiceFactory.getMemcacheService());
+    repository = new MemcacheSubscriptionsRepository(MemcacheServiceFactory.getMemcacheService(), Providers.of(subscriptionsExpiration));
   }
 
   @Test
@@ -94,7 +97,7 @@ public class MemcachSubscriptionsRepositoryTest {
 
     assertThat(subscriptions.size(), is(equalTo(1)));
     assertThat(subscriptions.get(0).getSubscriber(), is(equalTo(subscriber)));
-    assertThat(subscriptions.get(0).getEventName(), is(equalTo(SimpleEvent.TYPE.getEventName())));
+    assertThat(subscriptions.get(0).getEventName(), is(equalTo(SimpleEvent.TYPE.getKey())));
   }
 
   @Test
@@ -109,10 +112,10 @@ public class MemcachSubscriptionsRepositoryTest {
     assertThat(subscriptions.size(), is(equalTo(2)));
 
     assertThat(subscriptions.get(0).getSubscriber(), is(equalTo(subscriber)));
-    assertThat(subscriptions.get(0).getEventName(), is(equalTo(SimpleEvent.TYPE.getEventName())));
+    assertThat(subscriptions.get(0).getEventName(), is(equalTo(SimpleEvent.TYPE.getKey())));
 
     assertThat(subscriptions.get(1).getSubscriber(), is(equalTo("peter@gmail.com")));
-    assertThat(subscriptions.get(1).getEventName(), is(equalTo(SimpleEvent.TYPE.getEventName())));
+    assertThat(subscriptions.get(1).getEventName(), is(equalTo(SimpleEvent.TYPE.getKey())));
   }
 
   @Test
@@ -160,6 +163,34 @@ public class MemcachSubscriptionsRepositoryTest {
     repository.removeSubscription(SimpleEvent.TYPE, subscriber);
 
     assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
+  }
+
+  @Test
+  public void removeSubscribersFromSubscriptionForGivenEventType() throws Exception {
+
+    Subscription firstSubscription = aNewSubscription()
+            .subscriber(subscriber)
+            .eventType(SimpleEvent.TYPE)
+            .build();
+
+    Subscription secondSubscription = aNewSubscription()
+            .subscriber("anoter@user.com")
+            .eventType(SimpleEvent.TYPE)
+            .build();
+
+    Subscription thirdSubscription = aNewSubscription()
+            .subscriber("some@user.com")
+            .eventType(SimpleEvent.TYPE)
+            .build();
+
+    storeSubscriptions(firstSubscription, secondSubscription, thirdSubscription);
+
+    repository.removeSubscriptions(SimpleEvent.TYPE, Sets.newHashSet(subscriber, "some@user.com"));
+
+    List<Subscription> foundSubscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+
+    assertThat("incorrect subscriber count", foundSubscriptions.size(), is(1));
+    assertThat("incorrect subscriber", foundSubscriptions.get(0).getSubscriber(), is("anoter@user.com"));
   }
 
   @Test

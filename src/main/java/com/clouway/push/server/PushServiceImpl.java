@@ -4,6 +4,7 @@ import com.clouway.push.shared.PushEvent;
 import com.google.appengine.api.channel.ChannelFailureException;
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -29,14 +30,25 @@ public class PushServiceImpl implements PushService {
   }
 
   public void pushEvent(PushEvent event) {
+    pushEvent(event, "");
+  }
 
+  @Override
+  public void pushEvent(PushEvent event, String correlationId) {
     String message = encoder.encode(event);
 
+    // transforming the eventType
+    if (!Strings.isNullOrEmpty(correlationId)) {
+      event.getAssociatedType().setCorrelationId(correlationId);
+    }
+
+    long start = System.currentTimeMillis();
     List<Subscription> subscriptions = filter.filterSubscriptions(event.getAssociatedType());
+    log.info("Find subscriptions: " + subscriptions.size() + " for " + event.getAssociatedType().getKey() + " " + (System.currentTimeMillis() - start) + " ms");
 
     ChannelService channelService = channelServiceProvider.get();
 
-    long start = System.currentTimeMillis();
+    start = System.currentTimeMillis();
     try {
       for (Subscription subscription : subscriptions) {
         channelService.sendMessage(new ChannelMessage(subscription.getSubscriber(), message));
@@ -47,4 +59,5 @@ public class PushServiceImpl implements PushService {
 
     log.info("Send all messages for: " + (System.currentTimeMillis() - start) + " ms");
   }
+
 }
