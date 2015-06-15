@@ -209,7 +209,11 @@ public class PushChannelApiImpl implements PushChannelApi {
       }
 
       public void onSuccess(String channelToken) {
-        openChannel(channelToken);
+        try {
+          openChannel(channelToken);
+        } catch (Exception e) {
+
+        }
       }
     });
   }
