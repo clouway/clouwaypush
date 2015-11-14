@@ -16,9 +16,7 @@ import java.util.List;
 import static com.clouway.push.server.Subscription.aNewSubscription;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -31,50 +29,57 @@ public class MemcacheSubscriptionsRepositoryTest {
 
   private final String subscriber = "john@gmail.com";
 
-  private final Integer subscriptionsExpiration = 10000;
-
   private final Subscription subscription = aNewSubscription().subscriber(subscriber)
-                                                              .eventType(SimpleEvent.TYPE)
-                                                              .build();
+          .eventType(SimpleEvent.TYPE)
+          .expires(afterOneMinute())
+          .build();
 
-  Subscription anotherSubscription = aNewSubscription().subscriber(subscriber)
-                                                       .eventType(AnotherEvent.TYPE)
-                                                       .build();
+  private final Subscription anotherSubscription = aNewSubscription().subscriber(subscriber)
+          .eventType(AnotherEvent.TYPE)
+          .expires(afterOneMinute())
+          .build();
 
   @Before
   public void setUp() {
-
     helper.setUp();
 
-    repository = new MemcacheSubscriptionsRepository(MemcacheServiceFactory.getMemcacheService(), Providers.of(subscriptionsExpiration));
+    final Integer subscriptionsExpiration = 10000;
+    repository = new MemcacheSubscriptionsRepository(
+            MemcacheServiceFactory.getMemcacheService(),
+            Providers.of(subscriptionsExpiration),
+            Providers.of(new DateTime())
+    );
   }
 
   @Test
-  public void putSingleSubscription() throws Exception {
+  public void findSubscriberSubscription() throws Exception {
 
     storeSubscriptions(subscription);
 
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(subscriber);
+    assertThat(subscriptions.size(),is(1));
+    assertThat(subscriptions.get(0).getEventName(),is(equalTo(subscription.getEventName())));
   }
 
   @Test
-  public void putTwoSubscriptions() throws Exception {
+  public void findSubscriberSubscriptions() throws Exception {
 
     storeSubscriptions(subscription, anotherSubscription);
 
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertTrue(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(subscriber);
+
+    assertThat(subscriptions.size(),is(2));
   }
 
   @Test
-  public void putSubscriptionsOfSameEventTypeForTwoSubscribers() throws Exception {
+  public void findSubscriptionsOfMultipleSubscribers() throws Exception {
+    storeSubscriptions(
+            aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).expires(afterOneMinute()).build(),
+            aNewSubscription().subscriber("john@gmail.com").eventType(SimpleEvent.TYPE).expires(afterOneMinute()).build()
+    );
 
-    Subscription anotherSubscription = aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).build();
-
-    storeSubscriptions(subscription, anotherSubscription);
-
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, "peter@gmail.com"));
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.size(),is(2));
   }
 
   @Test
@@ -104,7 +109,7 @@ public class MemcacheSubscriptionsRepositoryTest {
   public void findSubscribersForEvent() throws Exception {
 
     storeSubscriptions(subscription, anotherSubscription,
-            aNewSubscription().eventType(SimpleEvent.TYPE).subscriber("peter@gmail.com").build(),
+            aNewSubscription().eventType(SimpleEvent.TYPE).subscriber("peter@gmail.com").expires(afterOneMinute()).build(),
             aNewSubscription().eventType(AnotherEvent.TYPE).subscriber("peter@gmail.com").build());
 
     List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
@@ -118,6 +123,7 @@ public class MemcacheSubscriptionsRepositoryTest {
     assertThat(subscriptions.get(1).getEventName(), is(equalTo(SimpleEvent.TYPE.getKey())));
   }
 
+
   @Test
   public void removeSingleSubscription() throws Exception {
 
@@ -125,23 +131,24 @@ public class MemcacheSubscriptionsRepositoryTest {
 
     repository.removeSubscription(subscription);
 
-    assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(subscription.getSubscriber());
+    assertThat(subscriptions.size(), is(0));
   }
 
   @Test
   public void removeAllSubscriptionsForSubscriber() throws Exception {
 
-    storeSubscriptions(subscription, anotherSubscription,
-            aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).build(),
-            aNewSubscription().subscriber("peter@gmail.com").eventType(AnotherEvent.TYPE).build());
+    storeSubscriptions(
+            aNewSubscription().subscriber("john@gmail.com").eventType(SimpleEvent.TYPE).expires(afterOneMinute()).build(),
+            aNewSubscription().subscriber("john@gmail.com").eventType(AnotherEvent.TYPE).expires(afterOneMinute()).build(),
+            aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).expires(afterOneMinute()).build(),
+            aNewSubscription().subscriber("peter@gmail.com").eventType(AnotherEvent.TYPE).expires(afterOneMinute()).build()
+    );
 
     repository.removeAllSubscriptions(subscriber);
 
-    assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertFalse(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
-
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, "peter@gmail.com"));
-    assertTrue(repository.hasSubscription(AnotherEvent.TYPE, "peter@gmail.com"));
+    List<Subscription> subscriptions = repository.findSubscriptions("peter@gmail.com");
+    assertThat(subscriptions.size(), is(2));
   }
 
   @Test
@@ -151,18 +158,28 @@ public class MemcacheSubscriptionsRepositoryTest {
 
     repository.removeSubscription(anotherSubscription);
 
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertFalse(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
+    List<Subscription> simpleEventSubscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    List<Subscription> anotherEventSubscriptions = repository.findSubscriptions(AnotherEvent.TYPE);
+
+    assertThat(simpleEventSubscriptions.size(), is(1));
+    assertThat(anotherEventSubscriptions.size(), is(0));
   }
 
   @Test
   public void removeSingleSubscriptionByEventTypeAndSubscriber() throws Exception {
 
-    storeSubscriptions(subscription);
+    storeSubscriptions(
+            aNewSubscription()
+                    .subscriber("user1@user.com")
+                    .eventType(SimpleEvent.TYPE)
+                    .expires(afterOneMinute())
+                    .build()
+    );
 
-    repository.removeSubscription(SimpleEvent.TYPE, subscriber);
+    repository.removeSubscriptions(SimpleEvent.TYPE, Sets.<String>newHashSet("user1@user.com"));
 
-    assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.size(), is(0));
   }
 
   @Test
@@ -171,16 +188,19 @@ public class MemcacheSubscriptionsRepositoryTest {
     Subscription firstSubscription = aNewSubscription()
             .subscriber(subscriber)
             .eventType(SimpleEvent.TYPE)
+            .expires(afterOneMinute())
             .build();
 
     Subscription secondSubscription = aNewSubscription()
             .subscriber("anoter@user.com")
             .eventType(SimpleEvent.TYPE)
+            .expires(afterOneMinute())
             .build();
 
     Subscription thirdSubscription = aNewSubscription()
             .subscriber("some@user.com")
             .eventType(SimpleEvent.TYPE)
+            .expires(afterOneMinute())
             .build();
 
     storeSubscriptions(firstSubscription, secondSubscription, thirdSubscription);
@@ -195,21 +215,20 @@ public class MemcacheSubscriptionsRepositoryTest {
 
   @Test
   public void removeAllSubscriptionsWhenSubscriberDoNotHaveAny() throws Exception {
-
     repository.removeAllSubscriptions(subscriber);
 
-    assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(subscriber);
+    assertThat(subscriptions.size(), is(0));
   }
 
   @Test
   public void putTwoSubscriptionsRemoveOnlyOneByTypeAndSubscriber() throws Exception {
-
     storeSubscriptions(subscription, anotherSubscription);
 
-    repository.removeSubscription(AnotherEvent.TYPE, subscriber);
+    repository.removeSubscriptions(AnotherEvent.TYPE, Sets.newHashSet(subscriber));
 
-    assertTrue(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertFalse(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.size(), is(1));
   }
 
   @Test
@@ -217,7 +236,7 @@ public class MemcacheSubscriptionsRepositoryTest {
 
     storeSubscriptions(subscription);
 
-    repository.removeSubscription(SimpleEvent.TYPE, subscriber);
+    repository.removeSubscriptions(SimpleEvent.TYPE, Sets.newHashSet(subscriber));
 
     List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
     assertThat(subscriptions.size(), is(0));
@@ -236,29 +255,31 @@ public class MemcacheSubscriptionsRepositoryTest {
 
   @Test
   public void findSubscriptionAfterRemovingAllSubscriptionForSubscriber() {
-
     storeSubscriptions(subscription, anotherSubscription);
 
     repository.removeAllSubscriptions(subscriber);
 
-    assertFalse(repository.hasSubscription(SimpleEvent.TYPE, subscriber));
-    assertFalse(repository.hasSubscription(AnotherEvent.TYPE, subscriber));
+    List<Subscription> subscriptions = repository.findSubscriptions(subscriber);
+    assertThat(subscriptions.size(), is(0));
   }
 
   @Test
   public void updateSubscriptionsExpirationDateWhenStored() {
 
-    subscription.setExpirationDate(new DateTime());
+    subscription.setExpirationDate(afterOneMinute());
     storeSubscriptions(subscription);
 
-    DateTime newDate = new DateTime().plusMinutes(1);
-    subscription.setExpirationDate(newDate);
-
+    subscription.setExpirationDate(afterOneMinute());
     storeSubscriptions(subscription);
 
     List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
-    assertThat(subscriptions.get(0).getExpirationDate(), is(equalTo(newDate)));
+    assertThat(subscriptions.get(0).getExpirationDate(), is(equalTo(subscription.getExpirationDate())));
   }
+
+  private DateTime afterOneMinute() {
+    return new DateTime().plusMinutes(1);
+  }
+
 
   private void storeSubscriptions(Subscription... subscriptions) {
     for (Subscription subscription : subscriptions) {

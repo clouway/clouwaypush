@@ -1,10 +1,12 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
+import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -13,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import static com.clouway.push.server.Subscription.aNewSubscription;
 
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
@@ -25,21 +25,17 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
 
   private final MemcacheService memcacheService;
   private Provider<Integer> subscriptionsExpiration;
+  private final Provider<DateTime> currentDate;
 
   @Inject
   public MemcacheSubscriptionsRepository(@Named("MemcacheService") MemcacheService memcacheService,
-                                         @SubscriptionsExpirationMills Provider<Integer> subscriptionsExpiration) {
+                                         @SubscriptionsExpirationMills Provider<Integer> subscriptionsExpiration,
+                                         @CurrentDate Provider<DateTime> currentDate) {
     this.memcacheService = memcacheService;
     this.subscriptionsExpiration = subscriptionsExpiration;
+    this.currentDate = currentDate;
   }
 
-  @Override
-  public boolean hasSubscription(PushEvent.Type eventType, String subscriber) {
-
-    Map<String, Subscription> subscriptionsMap = fetchSubscriptions(subscriber);
-
-    return subscriptionsMap != null && subscriptionsMap.containsKey(eventType.getKey());
-  }
 
   @Override
   public void put(Subscription subscription) {
@@ -47,37 +43,6 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
     storeAndUpdateSubscriberSubscriptions(subscription);
 
     storeAndUpdateEventSubscriptions(subscription);
-  }
-
-  private void storeAndUpdateSubscriberSubscriptions(Subscription subscription) {
-
-    Map<String, Subscription> subscriberSubscriptions = fetchSubscriptions(subscription.getSubscriber());
-
-    if (subscriberSubscriptions != null) {
-      subscriberSubscriptions.put(subscription.getEventName(), subscription);
-    } else {
-      subscriberSubscriptions = Maps.newHashMap();
-      subscriberSubscriptions.put(subscription.getEventName(), subscription);
-    }
-
-    storeSubscriptions(subscription.getSubscriber(), subscriberSubscriptions);
-  }
-
-  private void storeAndUpdateEventSubscriptions(Subscription subscription) {
-
-    Map<String, Subscription> eventSubscriptions = fetchSubscriptions(subscription.getEventType());
-    if (eventSubscriptions != null) {
-      eventSubscriptions.put(subscription.getSubscriber(), subscription);
-    } else {
-      eventSubscriptions = Maps.newHashMap();
-      eventSubscriptions.put(subscription.getSubscriber(), subscription);
-    }
-    storeSubscriptions(subscription.getEventType(), eventSubscriptions);
-  }
-
-  @Override
-  public void removeSubscription(PushEvent.Type eventType, String subscriber) {
-    removeSubscription(aNewSubscription().eventType(eventType).subscriber(subscriber).build());
   }
 
   @Override
@@ -88,7 +53,7 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
       subscriptions.remove(subscriber);
     }
 
-    if(!subscribers.isEmpty()) {
+    if (!subscribers.isEmpty()) {
       storeSubscriptions(type, subscriptions);
     }
   }
@@ -106,16 +71,30 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
 
   @Override
   public List<Subscription> findSubscriptions(PushEvent.Type type) {
-
     log.info("Event type: " + type.getKey());
 
-    Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(type.getKey());
+    Map<String, Subscription> subscriptions = getSubscriptions(type.getKey());
 
-    if (subscriptions != null) {
-      return Lists.newArrayList(subscriptions.values());
+    if (subscriptions == null) {
+      return Lists.newArrayList();
     }
 
-    return Lists.newArrayList();
+    Set<String> subscribersForRemove = Sets.newHashSet();
+    List<Subscription> activeSubscriptions = Lists.newArrayList();
+
+    DateTime now = currentDate.get();
+
+    for (Subscription subscription : subscriptions.values()) {
+      if (subscription.isActive(now)) {
+        activeSubscriptions.add(subscription);
+      } else {
+        subscribersForRemove.add(subscription.getSubscriber());
+      }
+    }
+
+    removeSubscriptions(type, subscribersForRemove);
+
+    return activeSubscriptions;
   }
 
   @Override
@@ -146,6 +125,32 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
     }
   }
 
+  private void storeAndUpdateSubscriberSubscriptions(Subscription subscription) {
+
+    Map<String, Subscription> subscriberSubscriptions = fetchSubscriptions(subscription.getSubscriber());
+
+    if (subscriberSubscriptions != null) {
+      subscriberSubscriptions.put(subscription.getEventName(), subscription);
+    } else {
+      subscriberSubscriptions = Maps.newHashMap();
+      subscriberSubscriptions.put(subscription.getEventName(), subscription);
+    }
+
+    storeSubscriptions(subscription.getSubscriber(), subscriberSubscriptions);
+  }
+
+  private void storeAndUpdateEventSubscriptions(Subscription subscription) {
+
+    Map<String, Subscription> eventSubscriptions = fetchSubscriptions(subscription.getEventType());
+    if (eventSubscriptions != null) {
+      eventSubscriptions.put(subscription.getSubscriber(), subscription);
+    } else {
+      eventSubscriptions = Maps.newHashMap();
+      eventSubscriptions.put(subscription.getSubscriber(), subscription);
+    }
+    storeSubscriptions(subscription.getEventType(), eventSubscriptions);
+  }
+
   private void storeSubscriptions(String subscriber, Map<String, Subscription> subscriptionMap) {
     safeStore(subscriber, subscriptionMap);
   }
@@ -165,20 +170,17 @@ public class MemcacheSubscriptionsRepository implements SubscriptionsRepository 
   }
 
   private Map<String, Subscription> fetchSubscriptions(String subscriber) {
-    return safeGet(subscriber);
+    return getSubscriptions(subscriber);
   }
 
   private Map<String, Subscription> fetchSubscriptions(PushEvent.Type type) {
-    return safeGet(type.getKey());
+    return getSubscriptions(type.getKey());
   }
 
-  private Map<String, Subscription> safeGet(String key) {
-
-    MemcacheService.IdentifiableValue identifiableValue = memcacheService.getIdentifiable(key);
-    if (identifiableValue != null) {
-      return (Map<String, Subscription>) identifiableValue.getValue();
-    }
-
+  @SuppressWarnings("unchecked")
+  private Map<String, Subscription> getSubscriptions(String key) {
     return (Map<String, Subscription>) memcacheService.get(key);
   }
+
+
 }

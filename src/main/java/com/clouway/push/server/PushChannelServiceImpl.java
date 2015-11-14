@@ -4,6 +4,7 @@ import com.clouway.push.client.channelapi.PushChannelService;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.channel.ChannelServiceFactory;
+import com.google.common.collect.Sets;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -18,7 +19,7 @@ import static com.clouway.push.server.Subscription.aNewSubscription;
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
 @Singleton
-public class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
+class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
 
   Logger log = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -48,7 +49,7 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
     Subscription subscription = aNewSubscription().eventName(type.getKey())
                                                   .eventType(type)
                                                   .subscriber(subscriber)
-                                                  .expirationDate(expirationDate.get())
+                                                  .expires(expirationDate.get())
                                                   .build();
 
     subscriptionsRepository.put(subscription);
@@ -56,12 +57,8 @@ public class PushChannelServiceImpl extends RemoteServiceServlet implements Push
 
   @Override
   public void unsubscribe(String subscriber, PushEvent.Type eventType) {
-
     log.info("Unsubscribe: " + subscriber + " from event: " + eventType.getKey());
-
-    if (subscriptionsRepository.hasSubscription(eventType, subscriber)) {
-      subscriptionsRepository.removeSubscription(eventType, subscriber);
-    }
+    subscriptionsRepository.removeSubscriptions(eventType, Sets.newHashSet(subscriber));
   }
 
   @Override

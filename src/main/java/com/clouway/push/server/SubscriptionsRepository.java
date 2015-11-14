@@ -10,11 +10,7 @@ import java.util.Set;
  */
 public interface SubscriptionsRepository {
 
-  boolean hasSubscription(PushEvent.Type eventType, String subscriber);
-
   void put(Subscription subscription);
-
-  void removeSubscription(PushEvent.Type eventType, String subscriber);
 
   void removeSubscriptions(PushEvent.Type type, Set<String> subscribers);
 

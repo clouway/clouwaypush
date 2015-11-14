@@ -5,6 +5,7 @@ import com.clouway.push.client.channelapi.PushChannelService;
 import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
 import com.clouway.push.shared.util.DateTime;
+import com.google.appengine.labs.repackaged.com.google.common.collect.Sets;
 import com.google.inject.util.Providers;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
@@ -30,7 +31,7 @@ public class PushChannelServiceImplTest {
   public final JUnitRuleMockery context = new JUnitRuleMockery();
 
   @Mock
-  private SubscriptionsRepository repository;
+  SubscriptionsRepository repository;
 
   private PushChannelService pushChannelService;
 
@@ -41,9 +42,9 @@ public class PushChannelServiceImplTest {
   private InstanceCapture<Subscription> subscriptionCapture = new InstanceCapture<Subscription>();
 
   private Subscription subscription = aNewSubscription().subscriber(subscriber)
-                                                        .eventName("SimpleEvent")
-                                                        .eventType(event.TYPE)
-                                                        .build();
+          .eventName("SimpleEvent")
+          .eventType(event.TYPE)
+          .build();
 
   @Before
   public void setUp() {
@@ -71,23 +72,7 @@ public class PushChannelServiceImplTest {
   public void unsubscribeFromSubscribedEvent() {
 
     context.checking(new Expectations() {{
-      oneOf(repository).hasSubscription(event.TYPE, subscriber);
-      will(returnValue(true));
-
-      oneOf(repository).removeSubscription(event.TYPE, subscriber);
-    }});
-
-    pushChannelService.unsubscribe(subscriber, event.TYPE);
-  }
-
-  @Test
-  public void unsubscribeFromNotSubscribedEvent() {
-
-    context.checking(new Expectations() {{
-      oneOf(repository).hasSubscription(event.TYPE, subscriber);
-      will(returnValue(false));
-
-      never(repository).removeSubscription(event.TYPE, subscriber);
+      oneOf(repository).removeSubscriptions(event.TYPE, Sets.newHashSet(subscriber));
     }});
 
     pushChannelService.unsubscribe(subscriber, event.TYPE);
@@ -116,7 +101,8 @@ public class PushChannelServiceImplTest {
 
   private class SimpleEvent extends PushEvent<PushEventHandler> {
 
-    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {};
+    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {
+    };
 
     @Override
     public Type<PushEventHandler> getAssociatedType() {

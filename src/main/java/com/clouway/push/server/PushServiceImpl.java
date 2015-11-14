@@ -18,13 +18,13 @@ public class PushServiceImpl implements PushService {
 
   private static final Logger log = Logger.getLogger(PushServiceImpl.class.getName());
 
-  private ActiveSubscriptionsFilter filter;
-  private Encoder encoder;
-  private Provider<ChannelService> channelServiceProvider;
+  private final SubscriptionsRepository subscriptions;
+  private final Encoder encoder;
+  private final Provider<ChannelService> channelServiceProvider;
 
   @Inject
-  public PushServiceImpl(ActiveSubscriptionsFilter filter, Encoder encoder, Provider<ChannelService> channelServiceProvider) {
-    this.filter = filter;
+  public PushServiceImpl(SubscriptionsRepository subscriptions, Encoder encoder, Provider<ChannelService> channelServiceProvider) {
+    this.subscriptions = subscriptions;
     this.encoder = encoder;
     this.channelServiceProvider = channelServiceProvider;
   }
@@ -43,7 +43,7 @@ public class PushServiceImpl implements PushService {
     }
 
     long start = System.currentTimeMillis();
-    List<Subscription> subscriptions = filter.filterSubscriptions(event.getAssociatedType());
+    List<Subscription> subscriptions = this.subscriptions.findSubscriptions(event.getAssociatedType());
     log.info("Find subscriptions: " + subscriptions.size() + " for " + event.getAssociatedType().getKey() + " " + (System.currentTimeMillis() - start) + " ms");
 
     ChannelService channelService = channelServiceProvider.get();

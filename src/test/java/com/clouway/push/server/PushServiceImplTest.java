@@ -22,7 +22,7 @@ public class PushServiceImplTest {
   public final JUnitRuleMockery context = new JUnitRuleMockery();
 
   @Mock
-  private ActiveSubscriptionsFilter filter;
+  private SubscriptionsRepository repository;
 
   @Mock
   private Encoder encoder;
@@ -34,7 +34,7 @@ public class PushServiceImplTest {
 
   @Before
   public void setUp() throws Exception {
-    pushService = new PushServiceImpl(filter, encoder, Providers.of(channelService));
+    pushService = new PushServiceImpl(repository, encoder, Providers.of(channelService));
   }
 
   @Test
@@ -50,7 +50,7 @@ public class PushServiceImplTest {
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
 
-      oneOf(filter).filterSubscriptions(event.getAssociatedType());
+      oneOf(repository).findSubscriptions(event.getAssociatedType());
       will(returnValue(Lists.newArrayList(subscription)));
 
       oneOf(channelService).sendMessage(with(channelMessageCaptor));
@@ -76,7 +76,7 @@ public class PushServiceImplTest {
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
 
-      oneOf(filter).filterSubscriptions(event.getAssociatedType());
+      oneOf(repository).findSubscriptions(event.getAssociatedType());
       will(returnValue(Lists.newArrayList(subscription)));
 
       oneOf(channelService).sendMessage(with(channelMessageCaptor));
