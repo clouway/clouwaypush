@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author Georgi Georgiev (GeorgievJon@gmail.com)
  */
-public class RpcEncoder implements Encoder {
+class RpcEncoder implements Encoder {
 
   private String serializationPolicyDirectory;
 

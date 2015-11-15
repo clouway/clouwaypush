@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author Georgi Georgiev (GeorgievJon@gmail.com)
  */
-public class MergedSerializationPolicy extends SerializationPolicy {
+class MergedSerializationPolicy extends SerializationPolicy {
   List<SerializationPolicy> serializationPolicies;
 
   MergedSerializationPolicy(List<SerializationPolicy> serializationPolicies) {

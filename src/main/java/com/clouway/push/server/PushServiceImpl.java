@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public class PushServiceImpl implements PushService {
+class PushServiceImpl implements PushService {
 
   private static final Logger log = Logger.getLogger(PushServiceImpl.class.getName());
 

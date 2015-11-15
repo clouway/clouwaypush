@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-public class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
+class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
 
   private static final Logger log = Logger.getLogger(MemcacheSubscriptionsRepository.class.getName());
 
