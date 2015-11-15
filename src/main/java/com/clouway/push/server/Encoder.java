@@ -7,7 +7,14 @@ import com.clouway.push.shared.PushEvent;
  *
  * @author Georgi Georgiev (GeorgievJon@gmail.com)
  */
-public interface Encoder {
+interface Encoder {
 
+  /**
+   * Encodes the provided event as String value.
+   *
+   * @param event the event that needs to be encoded
+   * @return the encoded value of event
+   */
   String encode(PushEvent event);
+
 }

@@ -65,8 +65,14 @@ public class PushChannelModule extends AbstractModule {
   }
 
   @Provides
+  @Singleton
   public Encoder getEncoder(@Named("SerializationPolicyDirectory") String serializationPolicyDirectory) {
     return new RpcEncoder(serializationPolicyDirectory);
+  }
+
+  @Provides
+  public EncoderFactory getEncoderFactory(Encoder encoder) {
+    return new GenericEncoderFactory(encoder, new JsonEncoder());
   }
 
   @Provides

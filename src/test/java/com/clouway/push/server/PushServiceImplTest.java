@@ -14,7 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class PushServiceImplTest {
 
@@ -23,6 +23,9 @@ public class PushServiceImplTest {
 
   @Mock
   private SubscriptionsRepository repository;
+
+  @Mock
+  private EncoderFactory encoderFactory;
 
   @Mock
   private Encoder encoder;
@@ -34,7 +37,7 @@ public class PushServiceImplTest {
 
   @Before
   public void setUp() throws Exception {
-    pushService = new PushServiceImpl(repository, encoder, Providers.of(channelService));
+    pushService = new PushServiceImpl(repository, encoderFactory, Providers.of(channelService));
   }
 
   @Test
@@ -47,6 +50,9 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
+      oneOf(encoderFactory).create(event);
+      will(returnValue(encoder));
+
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
 
@@ -73,6 +79,9 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
+      oneOf(encoderFactory).create(event);
+      will(returnValue(encoder));
+
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
 
