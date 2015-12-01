@@ -35,14 +35,14 @@ class PushServiceImpl implements PushService {
 
   @Override
   public void pushEvent(PushEvent event, String correlationId) {
-    Encoder encoder = encoderFactory.create(event);
-
-    String message = encoder.encode(event);
 
     // transforming the eventType
     if (!Strings.isNullOrEmpty(correlationId)) {
       event.getAssociatedType().setCorrelationId(correlationId);
     }
+
+    Encoder encoder = encoderFactory.create(event);
+    String message = encoder.encode(event);
 
     long start = System.currentTimeMillis();
     List<Subscription> subscriptions = this.subscriptions.findSubscriptions(event.getAssociatedType());
