@@ -74,8 +74,9 @@ public class PushChannelModule extends AbstractModule {
   }
 
   @Provides
-  public EncoderFactory getEncoderFactory(Encoder encoder) {
-    return new GenericEncoderFactory(encoder, new JsonEncoder());
+  public EncoderFactory getEncoderFactory() {
+    JsonEncoder jsonEncoder = new JsonEncoder();
+    return new GenericEncoderFactory(jsonEncoder, jsonEncoder);
   }
 
   @Provides
