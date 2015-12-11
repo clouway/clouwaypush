@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2015-12-10
+ * clouwaypush - 2015-12-11
  *
  * Copyright (c) 2015 clouWay ltd
  */
@@ -198,6 +198,17 @@ angular.module('clouway-push', [])
         establishConnection(subscriber);
 
         return subscriber;
+      };
+
+      /**
+       * Fire a push event
+       *
+       * @param {string} event event to be fired
+       * @param {Object} data data object of the event
+       */
+      service.fireEvent = function (event, data) {
+        var eventData = angular.extend({event: event}, data);
+        onMessage({data: eventData});
       };
 
       /**

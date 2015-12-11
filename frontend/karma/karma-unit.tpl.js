@@ -11,11 +11,10 @@ module.exports = function ( karma ) {
     files: [
       //* injector:js *//
       //* endinjector *//
-      'src/**/*.js',
-      'src/**/*.tpl.html'
+      'src/**/*.js'
     ],
     exclude: [
-      'src/assets/**/*.js'
+      'src/testing/**/*.js'
     ],
     frameworks: [ 'jasmine' ],
     plugins: ['karma-jasmine', 'karma-phantomjs-launcher' ],

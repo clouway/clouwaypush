@@ -194,6 +194,17 @@ angular.module('clouway-push', [])
       };
 
       /**
+       * Fire a push event
+       *
+       * @param {string} event event to be fired
+       * @param {Object} data data object of the event
+       */
+      service.fireEvent = function (event, data) {
+        var eventData = angular.extend({event: event}, data);
+        onMessage({data: eventData});
+      };
+
+      /**
        * Bind handler to push event.
        *
        * @param {String} eventName name of the push event to which to bind the handler

@@ -271,6 +271,17 @@ describe('PushApi', function () {
       expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, '');
     });
 
+    it('fire an event', function () {
+      var eventName = 'manual-event';
+
+      var handler = jasmine.createSpy('handler');
+      pushApi.bind(eventName, handler);
+
+      pushApi.fireEvent(eventName, {data: 'dummy'});
+
+      expect(handler).toHaveBeenCalledWith({data: 'dummy', event: eventName});
+    });
+
   });
 
   describe('connection opening should', function () {

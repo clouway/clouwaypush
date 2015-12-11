@@ -155,9 +155,26 @@ module.exports = function ( grunt ) {
         src: [
           'module.prefix',
           '<%= build_dir %>/src/**/*.js',
+          '!<%= build_dir %>/src/testing/**/*.js',
           'module.suffix'
         ],
         dest: '<%= compile_dir %>/<%= pkg.name %>.js'
+      },
+
+      /**
+       * The `compile_js` target is the concatenation of our application source
+       * code and all specified vendor source code into a single file.
+       */
+      compile_testing_js: {
+        options: {
+          banner: '<%= meta.banner %>'
+        },
+        src: [
+          'module.prefix',
+          '<%= build_dir %>/src/testing/**/*.js',
+          'module.suffix'
+        ],
+        dest: '<%= compile_dir %>/testing/<%= pkg.name %>-mocks.js'
       }
     },
 
@@ -348,6 +365,6 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'removeLoggingCalls', 'ngAnnotate', 'concat:compile_js', 'uglify'
+    'removeLoggingCalls', 'ngAnnotate', 'concat', 'uglify'
   ]);
 };
