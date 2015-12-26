@@ -366,6 +366,21 @@ describe('PushApi', function () {
       expect(connectMethod).toHaveBeenCalledWith(subscriber);
     });
 
+    it('use single keep-alive for all channels', function () {
+      pushApi.openConnection(subscriber);
+      connectDeferred.resolve(channelToken);
+      rootScope.$digest();
+
+      var socket = goog.appengine.Socket._get(channelToken);
+      socket.onerror();
+
+      connectDeferred.resolve(channelToken);
+      rootScope.$digest();
+
+      $interval.flush(keepAliveInterval * 1000);
+      expect(keepAliveMethod.calls.count()).toBe(1);
+    });
+
     it('call connect only once when multiple open connection calls before response', function () {
       pushApi.openConnection(subscriber);
       pushApi.openConnection(subscriber);

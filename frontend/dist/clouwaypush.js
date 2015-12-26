@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2015-12-11
+ * clouwaypush - 2015-12-26
  *
  * Copyright (c) 2015 clouWay ltd
  */
@@ -171,7 +171,9 @@ angular.module('clouway-push', [])
       var establishConnection = function () {
         connectionMethods.connect(channelSubscriber).then(function (token) {
           openChannel(token);
-          keepAliveInterval = $interval(keepAlive, timeIntervals.keepAlive * 1000);
+          if (!keepAliveInterval) { // Create only if there is no existing interval set.
+            keepAliveInterval = $interval(keepAlive, timeIntervals.keepAlive * 1000);
+          }
 
         }, function () {
           // Retry connection after time interval.
