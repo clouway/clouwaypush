@@ -1,5 +1,8 @@
 *.iml
-
+.shelf
+*.ipr
+*.iws
+target
 ## Directory-based project format:
 .idea/
 /out/
