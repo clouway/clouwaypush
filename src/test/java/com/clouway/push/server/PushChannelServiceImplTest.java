@@ -85,18 +85,10 @@ public class PushChannelServiceImplTest {
     subscriptions.add(subscription);
 
     context.checking(new Expectations() {{
-      oneOf(repository).findSubscriptions(subscriber);
-      will(returnValue(subscriptions));
-
-      oneOf(repository).put(subscription);
+      oneOf(repository).keepAliveTill(subscriber, subscriptionsExpirationDate);
     }});
 
     pushChannelService.keepAlive(subscriber);
-
-    assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
-  }
-
-  private class SimpleEventHandler implements PushEventHandler {
   }
 
   private class SimpleEvent extends PushEvent<PushEventHandler> {

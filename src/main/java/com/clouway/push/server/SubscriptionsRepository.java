@@ -1,6 +1,7 @@
 package com.clouway.push.server;
 
 import com.clouway.push.shared.PushEvent;
+import com.clouway.push.shared.util.DateTime;
 
 import java.util.List;
 import java.util.Set;
@@ -14,11 +15,7 @@ public interface SubscriptionsRepository {
 
   void removeSubscriptions(PushEvent.Type type, Set<String> subscribers);
 
-  List<Subscription> findSubscriptions(String subscriber);
-
   List<Subscription> findSubscriptions(PushEvent.Type type);
 
-  void removeSubscription(Subscription subscription);
-
-  void removeAllSubscriptions(String subscriber);
+  void keepAliveTill(String subscriber, DateTime dateTime);
 }

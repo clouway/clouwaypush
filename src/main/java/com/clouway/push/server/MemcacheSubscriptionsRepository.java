@@ -4,15 +4,20 @@ import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheService.CasValues;
+import com.google.appengine.api.memcache.MemcacheService.IdentifiableValue;
+import com.google.appengine.repackaged.com.google.api.client.util.Maps;
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -20,6 +25,8 @@ import java.util.logging.Logger;
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
 class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
+
+  private static final int MAX_RETRIES = 5;
 
   private static final Logger log = Logger.getLogger(MemcacheSubscriptionsRepository.class.getName());
 
@@ -36,150 +43,186 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
     this.currentDate = currentDate;
   }
 
-
   @Override
-  public void put(Subscription subscription) {
+  public void put(final Subscription subscription) {
+    safeStoreOrUpdate(subscription.getSubscriber(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          input = Maps.newHashMap();
+        }
 
-    storeAndUpdateSubscriberSubscriptions(subscription);
+        input.put(subscription.getEventName(), subscription);
+        return input;
+      }
+    });
 
-    storeAndUpdateEventSubscriptions(subscription);
+    safeStoreOrUpdate(subscription.getEventType().getKey(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          input = Maps.newHashMap();
+        }
+        input.put(subscription.getSubscriber(), subscription);
+        return input;
+      }
+    });
   }
 
   @Override
-  public void removeSubscriptions(PushEvent.Type type, Set<String> subscribers) {
-    Map<String, Subscription> subscriptions = fetchSubscriptions(type);
+  public void removeSubscriptions(final PushEvent.Type type, final Set<String> subscribers) {
 
-    for (String subscriber : subscribers) {
-      subscriptions.remove(subscriber);
-    }
-
-    if (!subscribers.isEmpty()) {
-      storeSubscriptions(type, subscriptions);
-    }
-  }
-
-  @Override
-  public List<Subscription> findSubscriptions(String subscriber) {
-
-    Map<String, Subscription> subscriptions = fetchSubscriptions(subscriber);
-    if (subscriptions != null) {
-      return Lists.newArrayList(subscriptions.values());
-    }
-
-    return Lists.newArrayList();
+    safeStoreOrUpdate(type.getKey(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          return Maps.newHashMap();
+        }
+        for (String each : subscribers) {
+          input.remove(each);
+        }
+        return input;
+      }
+    });
   }
 
   @Override
   public List<Subscription> findSubscriptions(PushEvent.Type type) {
     log.info("Event type: " + type.getKey());
 
-    Map<String, Subscription> subscriptions = getSubscriptions(type.getKey());
+    final DateTime now = currentDate.get();
+    Map<String, Subscription> subscriptions = safeStoreOrUpdate(type.getKey(),
+            new Function<Map<String, Subscription>, Map<String, Subscription>>() {
 
-    if (subscriptions == null) {
-      return Lists.newArrayList();
-    }
+              @Override
+              public Map<String, Subscription> apply(Map<String, Subscription> subscriptions) {
 
-    Set<String> subscribersForRemove = Sets.newHashSet();
-    List<Subscription> activeSubscriptions = Lists.newArrayList();
+                for (Entry<String, Subscription> each : subscriptions.entrySet()) {
+                  if (!each.getValue().isActive(now)) {
+                    subscriptions.remove(each.getKey());
+                  }
+                }
 
-    DateTime now = currentDate.get();
+                return subscriptions;
+              }
+            });
 
-    for (Subscription subscription : subscriptions.values()) {
-      if (subscription.isActive(now)) {
-        activeSubscriptions.add(subscription);
-      } else {
-        subscribersForRemove.add(subscription.getSubscriber());
+    return Lists.newArrayList(subscriptions.values());
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void keepAliveTill(final String subscriber, final DateTime time) {
+    final Set<String> events = Sets.newHashSet();
+
+    safeStoreOrUpdate(subscriber, new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          return Maps.newHashMap();
+        }
+        for (Subscription subscription : input.values()) {
+          subscription.renewingTillDate(time);
+          events.add(subscription.getEventType().getKey());
+        }
+
+        return input;
       }
-    }
+    });
 
-    removeSubscriptions(type, subscribersForRemove);
+    bulkUpdate(events, new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        for (Subscription s : input.values()) {
+          // Only subscription of requested subscriber is updated.
+          if (s.getSubscriber().equals(subscriber)) {
+            s.renewingTillDate(time);
+          }
+        }
+        return input;
+      }
+    });
 
-    return activeSubscriptions;
-  }
-
-  @Override
-  public void removeSubscription(Subscription subscription) {
-
-    Map<String, Subscription> subscriptions = fetchSubscriptions(subscription.getSubscriber());
-
-    if (subscriptions != null && subscriptions.containsKey(subscription.getEventName())) {
-      subscriptions.remove(subscription.getEventName());
-      storeSubscriptions(subscription.getSubscriber(), subscriptions);
-    }
-
-    subscriptions = fetchSubscriptions(subscription.getEventType());
-
-    if (subscriptions != null && subscriptions.containsKey(subscription.getSubscriber())) {
-      subscriptions.remove(subscription.getSubscriber());
-      storeSubscriptions(subscription.getEventType(), subscriptions);
-    }
-  }
-
-  @Override
-  public void removeAllSubscriptions(String subscriber) {
-
-    List<Subscription> subscriptions = findSubscriptions(subscriber);
-
-    for (Subscription subscription : subscriptions) {
-      removeSubscription(subscription);
-    }
-  }
-
-  private void storeAndUpdateSubscriberSubscriptions(Subscription subscription) {
-
-    Map<String, Subscription> subscriberSubscriptions = fetchSubscriptions(subscription.getSubscriber());
-
-    if (subscriberSubscriptions != null) {
-      subscriberSubscriptions.put(subscription.getEventName(), subscription);
-    } else {
-      subscriberSubscriptions = Maps.newHashMap();
-      subscriberSubscriptions.put(subscription.getEventName(), subscription);
-    }
-
-    storeSubscriptions(subscription.getSubscriber(), subscriberSubscriptions);
-  }
-
-  private void storeAndUpdateEventSubscriptions(Subscription subscription) {
-
-    Map<String, Subscription> eventSubscriptions = fetchSubscriptions(subscription.getEventType());
-    if (eventSubscriptions != null) {
-      eventSubscriptions.put(subscription.getSubscriber(), subscription);
-    } else {
-      eventSubscriptions = Maps.newHashMap();
-      eventSubscriptions.put(subscription.getSubscriber(), subscription);
-    }
-    storeSubscriptions(subscription.getEventType(), eventSubscriptions);
-  }
-
-  private void storeSubscriptions(String subscriber, Map<String, Subscription> subscriptionMap) {
-    safeStore(subscriber, subscriptionMap);
-  }
-
-  private void storeSubscriptions(PushEvent.Type type, Map<String, Subscription> subscriptionMap) {
-    safeStore(type.getKey(), subscriptionMap);
-  }
-
-  private void safeStore(String key, Map<String, Subscription> subscriptionMap) {
-
-    MemcacheService.IdentifiableValue identifiableValue = memcacheService.getIdentifiable(key);
-    if (identifiableValue != null) {
-      memcacheService.putIfUntouched(key, identifiableValue, subscriptionMap, Expiration.byDeltaMillis(subscriptionsExpiration.get()));
-    } else {
-      memcacheService.put(key, subscriptionMap, Expiration.byDeltaMillis(subscriptionsExpiration.get()));
-    }
-  }
-
-  private Map<String, Subscription> fetchSubscriptions(String subscriber) {
-    return getSubscriptions(subscriber);
-  }
-
-  private Map<String, Subscription> fetchSubscriptions(PushEvent.Type type) {
-    return getSubscriptions(type.getKey());
   }
 
   @SuppressWarnings("unchecked")
   private Map<String, Subscription> getSubscriptions(String key) {
     return (Map<String, Subscription>) memcacheService.get(key);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K, V> V safeStoreOrUpdate(K key, Function<V, V> func) {
+    return this.safeStoreOrUpdate(MAX_RETRIES, subscriptionsExpiration.get(), key, func);
+  }
+
+  //TODO(mgenov): extract these operation to external object
+  @SuppressWarnings("unchecked")
+  private <K, V> V safeStoreOrUpdate(int maxRetryCount, int cacheTime, K key, Function<V, V> func) {
+    for (int retry = 0; retry < maxRetryCount; retry++) {
+      IdentifiableValue identifiables = memcacheService.getIdentifiable(key);
+
+      if (identifiables == null) {
+        V result = func.apply(null);
+        memcacheService.put(key, result);
+        return result;
+      }
+
+      V updated = func.apply((V) identifiables.getValue());
+      boolean isStored = memcacheService.putIfUntouched(key, identifiables, updated, Expiration.byDeltaMillis(cacheTime));
+      if (isStored) {
+        return updated;
+      }
+
+      // Wait a little bit before next retry
+      try {
+        Thread.sleep(5);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    throw new UpdateFailedException(String.format("The update of key %s was failed due timeout.", key));
+  }
+
+  private <K, V> Map<K, V> bulkUpdate(Collection<K> keys, Function<V, V> func) {
+    return this.bulkUpdate(MAX_RETRIES, subscriptionsExpiration.get(), keys, func);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K, V> Map<K, V> bulkUpdate(int maxRetryCount, int cacheTime, Collection<K> keys, Function<V, V> func) {
+    for (int retry = 0; retry < maxRetryCount; retry++) {
+      Map<K, IdentifiableValue> identifiables = memcacheService.getIdentifiables(keys);
+
+      if (identifiables.size() == 0) {
+        return null;
+      }
+
+      Map<K, CasValues> updateMap = Maps.newHashMap();
+      Map<K, V> result = Maps.newHashMap();
+
+      for (K each : identifiables.keySet()) {
+        V v = (V) identifiables.get(each).getValue();
+        result.put(each, func.apply(v));
+
+        updateMap.put(each, new CasValues(identifiables.get(each), v));
+      }
+
+      Set<K> updated = memcacheService.putIfUntouched(updateMap, Expiration.byDeltaMillis(cacheTime));
+
+      // If all items are updated, we tell the caller that everything is fine.
+      if (updated.size() == identifiables.size()) {
+        return result;
+      }
+
+      // Wait a little bit before next retry
+      try {
+        Thread.sleep(5);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    throw new UpdateFailedException(String.format("The update of keys %s was failed due timeout.", keys));
   }
 
 

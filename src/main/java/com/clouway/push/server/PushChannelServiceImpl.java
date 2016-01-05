@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import static com.clouway.push.server.Subscription.aNewSubscription;
@@ -47,10 +46,10 @@ class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannel
     log.info("Subscribe: " + subscriber + " for event: " + type.getKey());
 
     Subscription subscription = aNewSubscription().eventName(type.getKey())
-                                                  .eventType(type)
-                                                  .subscriber(subscriber)
-                                                  .expires(expirationDate.get())
-                                                  .build();
+            .eventType(type)
+            .subscriber(subscriber)
+            .expires(expirationDate.get())
+            .build();
 
     subscriptionsRepository.put(subscription);
   }
@@ -64,13 +63,7 @@ class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannel
   @Override
   public void keepAlive(String subscriber) {
 
-    log.info("Keep alive subscriber: " + subscriber);
-
-    List<Subscription> subscriptions = subscriptionsRepository.findSubscriptions(subscriber);
-    for (Subscription subscription : subscriptions) {
-      subscription.renewingTillDate(expirationDate.get());
-      subscriptionsRepository.put(subscription);
-    }
+    subscriptionsRepository.keepAliveTill(subscriber, expirationDate.get());
   }
 
   @Override
