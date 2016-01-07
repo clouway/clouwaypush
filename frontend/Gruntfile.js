@@ -162,8 +162,8 @@ module.exports = function ( grunt ) {
       },
 
       /**
-       * The `compile_js` target is the concatenation of our application source
-       * code and all specified vendor source code into a single file.
+       * The `compile_testing_js` target is the concatenation of our application testing sources
+       * and source code into a single *.mocks.js file.
        */
       compile_testing_js: {
         options: {

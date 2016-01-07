@@ -6,68 +6,72 @@ describe('PushApi', function () {
 
   beforeEach(module('clouway-push'));
 
-  var pushApi, socket, rootScope, connectMethod, bindMethod, unbindMethod;
+  var pushApi, socket, rootScope;
   var subscriber = 'test-subscriber';
   var channelToken = 'fake-channel-token';
   var $window = {};
 
-  describe('service should', function () {
+  describe('after established connection ', function () {
+     var httpBackend;
+     var keepAliveInterval = 5; //in seconds
+     var callback1, callback2, callback3;
 
-    beforeEach(function () {
-      module(function ($provide, pushApiProvider) {
-        connectMethod = jasmine.createSpy('connectMethod');
-        bindMethod = jasmine.createSpy('bindMethod');
-        unbindMethod = jasmine.createSpy('unbindMethod');
+     beforeEach(function () {
+       module(function (pushApiProvider) {
+         pushApiProvider
+                 .keepAliveTimeInterval(keepAliveInterval)
+                 .backendServiceUrl("/pushService");
+       });
 
-        pushApiProvider.openConnectionMethod(connectMethod)
-          .bindMethod(bindMethod)
-          .unbindMethod(unbindMethod);
+       inject(function (_pushApi_, $httpBackend) {
+         pushApi = _pushApi_;
+         httpBackend = $httpBackend;
 
-        $provide.value('$window', $window);
-      });
+         httpBackend.expectGET('/pushService?subscriber=subscriber1').respond(200, "token1");
+         pushApi.openConnection("subscriber1");
+         httpBackend.flush();
 
-      inject(function ($rootScope, $q, _pushApi_) {
-        rootScope = $rootScope;
-        pushApi = _pushApi_;
-        var connectDeferred = $q.defer();
+         callback1 = jasmine.createSpy('callback1');
+         callback2 = jasmine.createSpy('callback2');
+         callback3 = jasmine.createSpy('callback3');
 
-        connectMethod.and.returnValue(connectDeferred.promise);
+         socket = goog.appengine.Socket._get("token1");
+       });
+     });
 
-        pushApi.openConnection(subscriber);
-        connectDeferred.resolve(channelToken);
-        rootScope.$digest();
-        socket = goog.appengine.Socket._get(channelToken);
-      });
-    });
+     afterEach(function () {
+        httpBackend.verifyNoOutstandingExpectation();
+        httpBackend.verifyNoOutstandingRequest();
+     });
 
-    it('call bound event handler', function () {
-      spyOn(pushApi, 'openConnection').and.returnValue('connection subscriber');
+
+    it('subscribes for event and receive message for it', function () {
       var eventName = 'fake-event';
-
       var callback = jasmine.createSpy('callback');
+
+      expectBindCall(eventName);
+
       pushApi.bind(eventName, callback);
-      expect(pushApi.openConnection).toHaveBeenCalled();
-      expect(bindMethod).toHaveBeenCalledWith('connection subscriber', eventName, '');
+      httpBackend.flush();
 
       socket.onmessage({data: angular.toJson({event: eventName})});
 
       expect(callback).toHaveBeenCalledWith({event: eventName});
     });
 
-    it('call many bound event handlers', function () {
+
+    it('subscribes for single event multiple times', function () {
       var eventName = 'fake-event';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var callback3 = jasmine.createSpy('callback3');
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+
       pushApi.bind(eventName, callback1);
       pushApi.bind(eventName, callback2);
       pushApi.bind(eventName, callback3);
 
-      expect(bindMethod.calls.count()).toEqual(3);
-      expect(bindMethod.calls.argsFor(0)).toEqual([subscriber, eventName, '']);
-      expect(bindMethod.calls.argsFor(1)).toEqual([subscriber, eventName, '']);
-      expect(bindMethod.calls.argsFor(2)).toEqual([subscriber, eventName, '']);
+      httpBackend.flush();
 
       var messageData = {event: eventName};
       socket.onmessage({data: angular.toJson(messageData)});
@@ -77,21 +81,20 @@ describe('PushApi', function () {
       expect(callback3).toHaveBeenCalledWith(messageData);
     });
 
-    it('call bound event handlers with correlationIds', function () {
-      spyOn(pushApi, 'openConnection').and.returnValue(subscriber);
+
+    it('subscribes for single event with correlationIds', function () {
+
       var eventName = 'fake-event';
       var correlationIdA = 'id-08433';
       var correlationIdB = 'id-12345';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
+      expectBindCall(eventName, correlationIdA);
+      expectBindCall(eventName, correlationIdB);
+
       pushApi.bindId(eventName, correlationIdA, callback1);
       pushApi.bindId(eventName, correlationIdB, callback2);
 
-      expect(pushApi.openConnection).toHaveBeenCalled();
-      expect(bindMethod.calls.count()).toEqual(2);
-      expect(bindMethod.calls.argsFor(0)).toEqual([subscriber, eventName, correlationIdA]);
-      expect(bindMethod.calls.argsFor(1)).toEqual([subscriber, eventName, correlationIdB]);
+      httpBackend.flush();
 
       socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
 
@@ -99,33 +102,37 @@ describe('PushApi', function () {
       expect(callback2).not.toHaveBeenCalled();
     });
 
-    it('call bound event handler with undefined correlationId', function () {
-      spyOn(pushApi, 'openConnection').and.returnValue('connection subscriber');
-      var eventName = 'fake-event';
-      var correlationId;
 
-      var callback = jasmine.createSpy('callback');
-      pushApi.bindId(eventName, correlationId, callback);
-      expect(pushApi.openConnection).toHaveBeenCalled();
-      expect(bindMethod).toHaveBeenCalledWith('connection subscriber', eventName, '');
+    it('subscribes for event with undefined correlationId', function () {
+      var eventName = 'another-fake-event';
+
+      expectBindCall(eventName);
+
+      pushApi.bindId(eventName, undefined, callback1);
+
+      httpBackend.flush();
 
       socket.onmessage({data: angular.toJson({event: eventName})});
 
-      expect(callback).toHaveBeenCalledWith({event: eventName});
+      expect(callback1).toHaveBeenCalledWith({event: eventName});
     });
+
 
     it('not call non-bound event handlers', function () {
       var eventName = 'fake-event';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var callback3 = jasmine.createSpy('callback3');
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+
       var boundCallback1 = pushApi.bind(eventName, callback1);
       var boundCallback2 = pushApi.bind(eventName, callback2);
       var boundCallback3 = pushApi.bind(eventName, callback3);
 
       pushApi.unbind(eventName, boundCallback1);
       pushApi.unbind(eventName, boundCallback3);
+
+      httpBackend.flush();
 
       var messageData = {event: eventName};
       socket.onmessage({data: angular.toJson(messageData)});
@@ -135,30 +142,16 @@ describe('PushApi', function () {
       expect(callback3).not.toHaveBeenCalled();
     });
 
+
     it('not unbind handler for non-existing event', function () {
       var eventName = 'fake-event';
+      expectBindCall(eventName);
 
-      var callback = jasmine.createSpy('callback');
-      var boundCallback = pushApi.bind(eventName, callback);
+      var boundCallback = pushApi.bind(eventName, callback1);
+
+      httpBackend.flush();
 
       pushApi.unbind('non-existing-event', boundCallback);
-
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
-
-      expect(callback).toHaveBeenCalled();
-    });
-
-    it('not unbind handler not for event', function () {
-      var eventName = 'fake-event';
-
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var boundCallback1 = pushApi.bind(eventName, callback1);
-      var boundCallback2 = pushApi.bind('other-event', callback2);
-
-      pushApi.unbind(eventName, boundCallback2);
-      expect(unbindMethod).not.toHaveBeenCalled();
 
       var messageData = {event: eventName};
       socket.onmessage({data: angular.toJson(messageData)});
@@ -166,18 +159,43 @@ describe('PushApi', function () {
       expect(callback1).toHaveBeenCalled();
     });
 
+
+    it('not unbind handler not for event', function () {
+      var eventName = 'fake-event';
+      var otherEvent = 'other-event';
+
+      expectBindCall(eventName);
+      expectBindCall(otherEvent);
+
+      var boundCallback1 = pushApi.bind(eventName, callback1);
+      var boundCallback2 = pushApi.bind(otherEvent, callback2);
+
+      pushApi.unbind(eventName, boundCallback2);
+
+      httpBackend.flush();
+      var messageData = {event: eventName};
+      socket.onmessage({data: angular.toJson(messageData)});
+
+      expect(callback1).toHaveBeenCalled();
+    });
+
+
     it('unbind all handlers for event', function () {
       var eventName = 'fake-event';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var callback3 = jasmine.createSpy('callback3');
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+
+      expectUnbindCall(eventName);
+
       pushApi.bind(eventName, callback1);
       pushApi.bind(eventName, callback2);
       pushApi.bind(eventName, callback3);
 
       pushApi.unbind(eventName);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, '');
+
+      httpBackend.flush();
 
       var messageData = {event: eventName};
       socket.onmessage({data: angular.toJson(messageData)});
@@ -187,20 +205,26 @@ describe('PushApi', function () {
       expect(callback3).not.toHaveBeenCalled();
     });
 
+
     it('unbind all handlers for event with correlationId', function () {
       var eventName = 'fake-event';
+
       var correlationIdA = 'id-12345';
       var correlationIdB = 'id-75980';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var callback3 = jasmine.createSpy('callback3');
+      expectBindCall(eventName, correlationIdB);
+      expectBindCall(eventName, correlationIdA);
+      expectBindCall(eventName, correlationIdB);
+
+      expectUnbindCall(eventName, correlationIdB);
+
       pushApi.bindId(eventName, correlationIdB, callback1);
       pushApi.bindId(eventName, correlationIdA, callback2);
       pushApi.bindId(eventName, correlationIdB, callback3);
 
       pushApi.unbindId(eventName, correlationIdB);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, correlationIdB);
+
+      httpBackend.flush();
 
       socket.onmessage({data: angular.toJson({event: eventName + correlationIdB})});
       socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
@@ -210,19 +234,23 @@ describe('PushApi', function () {
       expect(callback3).not.toHaveBeenCalled();
     });
 
+
     it('unbind all handlers for event with undefined correlationId', function () {
       var eventName = 'fake-event';
       var correlationIdA = 'id-12345';
 
-      var callback1 = jasmine.createSpy('callback1');
-      var callback2 = jasmine.createSpy('callback2');
-      var callback3 = jasmine.createSpy('callback3');
+      expectBindCall(eventName);
+      expectBindCall(eventName, correlationIdA);
+      expectBindCall(eventName);
+      expectUnbindCall(eventName);
+
       pushApi.bind(eventName, callback1);
       pushApi.bindId(eventName, correlationIdA, callback2);
       pushApi.bind(eventName, callback3);
 
       pushApi.unbindId(eventName, undefined);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, '');
+
+      httpBackend.flush();
 
       socket.onmessage({data: angular.toJson({event: eventName})});
       socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
@@ -232,8 +260,13 @@ describe('PushApi', function () {
       expect(callback3).not.toHaveBeenCalled();
     });
 
+
     it('call backend unbind only when last handler is unbound', function () {
       var eventName = 'fake-event';
+
+      expectBindCall(eventName);
+      expectBindCall(eventName);
+      expectUnbindCall(eventName);
 
       var callback1 = angular.noop;
       var callback2 = angular.noop;
@@ -241,193 +274,227 @@ describe('PushApi', function () {
       var boundCallback2 = pushApi.bind(eventName, callback2);
 
       pushApi.unbind(eventName, boundCallback2);
-      expect(unbindMethod).not.toHaveBeenCalled();
       pushApi.unbind(eventName, boundCallback1);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, '');
+
+      httpBackend.flush();
     });
+
 
     it('call backend unbind with correlationId', function () {
       var eventName = 'fake-event';
       var correlationId = 'id-12345';
 
+      expectBindCall(eventName, correlationId);
+      expectBindCall(eventName, correlationId);
+      expectUnbindCall(eventName, correlationId);
+
       var callback1 = angular.noop;
       var callback2 = angular.noop;
+
       var boundCallback1 = pushApi.bindId(eventName, correlationId, callback1);
       var boundCallback2 = pushApi.bindId(eventName, correlationId, callback2);
 
       pushApi.unbindId(eventName, correlationId, boundCallback2);
-      expect(unbindMethod).not.toHaveBeenCalled();
       pushApi.unbindId(eventName, correlationId, boundCallback1);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, correlationId);
+
+      httpBackend.flush();
     });
 
-    it('call backend unbind with undefined correlationId', function () {
-      var eventName = 'fake-event';
 
+    it('binds and unbinds from event with undefined correlationId', function () {
+      var eventName = 'fake-event';
       var callback = angular.noop;
+
+      expectBindCall(eventName);
+      expectUnbindCall(eventName);
+
       var boundCallback = pushApi.bind(eventName, callback);
 
       pushApi.unbindId(eventName, undefined, boundCallback);
-      expect(unbindMethod).toHaveBeenCalledWith(subscriber, eventName, '');
+
+      httpBackend.flush();
+
     });
 
-    it('fire an event', function () {
-      var eventName = 'manual-event';
+    it('fires an event', function () {
+      var manualEvent = 'manual-event';
 
-      var handler = jasmine.createSpy('handler');
-      pushApi.bind(eventName, handler);
+      expectBindCall(manualEvent);
 
-      pushApi.fireEvent(eventName, {data: 'dummy'});
+      pushApi.bind(manualEvent, callback1);
 
-      expect(handler).toHaveBeenCalledWith({data: 'dummy', event: eventName});
+      pushApi.fireEvent(manualEvent, {data: 'dummy'});
+
+      httpBackend.flush();
+
+      expect(callback1).toHaveBeenCalledWith({data: 'dummy', event: manualEvent});
     });
 
-  });
+    function expectBindCall(eventName,correlationId,response) {
+      if (!correlationId) {
+        correlationId = "";
+      }
 
-  describe('connection opening should', function () {
+      if (!response) {
+        httpBackend.expectPUT('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(200, "");
+      } else {
+        httpBackend.expectPUT('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(response.status, response.body);
+      }
+    }
 
-    var connectDeferred, keepAliveMethod, $interval, $timeout;
+    function expectUnbindCall(eventName, correlationId, response) {
+      if (!correlationId) {
+        correlationId = "";
+      }
+
+      if (!response) {
+        httpBackend.expectDELETE('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(200, "");
+      } else {
+        httpBackend.expectDELETE('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(response.status, response.body);
+      }
+    }
+
+   });
+
+  describe('Connection', function() {
+    var $interval, $timeout, httpBackend;
     var keepAliveInterval = 5; //in seconds
     var reconnectInterval = 20; //in seconds
+
     beforeEach(function () {
       module(function (pushApiProvider) {
-        connectMethod = jasmine.createSpy('connectMethod');
-        keepAliveMethod = jasmine.createSpy('keepAliveMethod');
-
-        pushApiProvider.openConnectionMethod(connectMethod);
-        pushApiProvider.keepAliveMethod(keepAliveMethod);
-        pushApiProvider.keepAliveTimeInterval(keepAliveInterval);
+        pushApiProvider
+                .keepAliveTimeInterval(keepAliveInterval)
+                .reconnectTimeInterval(reconnectInterval)
+                .backendServiceUrl("/pushService");
       });
 
-      inject(function ($rootScope, $q, _$interval_, _$timeout_, _pushApi_) {
-        rootScope = $rootScope;
+      inject(function (_pushApi_, $httpBackend, _$interval_, _$timeout_) {
+        pushApi = _pushApi_;
+        httpBackend = $httpBackend;
         $interval = _$interval_;
         $timeout = _$timeout_;
-        pushApi = _pushApi_;
-        connectDeferred = $q.defer();
 
-        connectMethod.and.returnValue(connectDeferred.promise);
+        socket = goog.appengine.Socket._get("token1");
       });
     });
 
-    it('call configured connect method', function () {
-      pushApi.openConnection(subscriber);
-      expect(connectMethod).toHaveBeenCalledWith(subscriber);
+    afterEach(function () {
+      httpBackend.verifyNoOutstandingExpectation();
+      httpBackend.verifyNoOutstandingRequest();
     });
 
-    it('not call anything when already connected', function () {
-      pushApi.openConnection(subscriber);
 
-      expect(connectMethod.calls.count()).toBe(1);
-      connectDeferred.resolve(channelToken);
-      rootScope.$digest();
+    it('opens new one', function () {
+      httpBackend.expectGET('/pushService?subscriber=subscriber1').respond(200, "token1");
+      pushApi.openConnection("subscriber1");
 
-      connectMethod.calls.reset();
-
-      pushApi.openConnection('any subscriber');
-      expect(connectMethod).not.toHaveBeenCalled();
+      httpBackend.flush();
     });
 
-    it('call keepAlive after time interval', function () {
-      pushApi.openConnection(subscriber);
-      connectDeferred.resolve('token');
-      rootScope.$digest();
+    it('reuses existing connection on second open', function () {
+      httpBackend.expectGET('/pushService?subscriber=subscriber1').respond(200, "token1");
 
-      expect(keepAliveMethod).not.toHaveBeenCalled();
+      pushApi.openConnection("subscriber1");
+      pushApi.openConnection("subscriber1");
+
+      httpBackend.flush();
+    });
+
+    it('keeps connection alive at specified time interval', function () {
+      httpBackend.expectGET('/pushService?subscriber=test-subscriber').respond(200, "token2");
+
+      pushApi.openConnection("test-subscriber");
+      httpBackend.flush();
+
+      httpBackend.expectPOST('/pushService?subscriber=test-subscriber').respond(200, "");
       $interval.flush(keepAliveInterval * 1000);
-      expect(keepAliveMethod).toHaveBeenCalledWith(subscriber);
+
+      httpBackend.flush();
     });
 
-    it('attempt a reconnect after time interval', function () {
+
+    it('attempts to reconnect periodically if connection fails', function () {
       var dummySubscriber = 'dummy_subscriber';
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(500, "dummy-token");
+
+      pushApi.openConnection(dummySubscriber);
+      httpBackend.flush();
+
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, "dummy-token");
+
+      $timeout.flush(reconnectInterval * 1000);
+
+      httpBackend.flush();
+    });
+
+    it('establishes new connection after channel expires', function () {
+      var dummySubscriber = 'dummy_subscriber';
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, "expiring-token");
+
+      pushApi.openConnection(dummySubscriber);
+      httpBackend.flush();
+
+
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, "dummy-token2");
+
+      var socket = goog.appengine.Socket._get("expiring-token");
+      socket.onerror();
+
+      httpBackend.flush();
+    });
+
+    it('uses single keep-alive for all channels', function () {
+      var dummySubscriber = 'dummy_subscriber';
+
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, channelToken);
       pushApi.openConnection(dummySubscriber);
 
-      expect(connectMethod.calls.count()).toBe(1);
+      httpBackend.flush();
 
-      connectDeferred.reject();
-      rootScope.$digest();
-
-      expect(connectMethod.calls.count()).toBe(1);
-      $timeout.flush(reconnectInterval * 1000);
-      expect(connectMethod.calls.count()).toBe(2);
-      expect(connectMethod.calls.mostRecent().args).toEqual([dummySubscriber]);
-    });
-
-    it('establish new connection after channel expire', function () {
-      pushApi.openConnection(subscriber);
-      connectDeferred.resolve(channelToken);
-      rootScope.$digest();
-
-      connectMethod.calls.reset();
-
-      expect(connectMethod).not.toHaveBeenCalled();
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, channelToken);
       var socket = goog.appengine.Socket._get(channelToken);
       socket.onerror();
-      expect(connectMethod).toHaveBeenCalledWith(subscriber);
-    });
+      httpBackend.flush();
 
-    it('use single keep-alive for all channels', function () {
-      pushApi.openConnection(subscriber);
-      connectDeferred.resolve(channelToken);
-      rootScope.$digest();
-
-      var socket = goog.appengine.Socket._get(channelToken);
-      socket.onerror();
-
-      connectDeferred.resolve(channelToken);
-      rootScope.$digest();
-
+      httpBackend.expectPOST('/pushService?subscriber=dummy_subscriber').respond(200, channelToken);
       $interval.flush(keepAliveInterval * 1000);
-      expect(keepAliveMethod.calls.count()).toBe(1);
+
+      httpBackend.flush();
     });
 
-    it('call connect only once when multiple open connection calls before response', function () {
-      pushApi.openConnection(subscriber);
-      pushApi.openConnection(subscriber);
-      pushApi.openConnection(subscriber);
+    it('sends single connect requests when multiple open connection calls are made', function () {
+      var dummySubscriber = 'dummy_subscriber';
 
-      expect(connectMethod.calls.count()).toBe(1);
-      connectDeferred.resolve(channelToken);
-      rootScope.$digest();
-
-      connectMethod.calls.reset();
-      expect(connectMethod).not.toHaveBeenCalled();
-    });
-
-    it('call connect only once when multiple open connection calls after failure', function () {
-      pushApi.openConnection(subscriber);
-
-      expect(connectMethod.calls.count()).toBe(1);
-      connectDeferred.reject();
-      rootScope.$digest();
-
-      connectMethod.calls.reset();
-      pushApi.openConnection(subscriber);
-      pushApi.openConnection(subscriber);
-      expect(connectMethod).not.toHaveBeenCalled();
+      httpBackend.expectGET('/pushService?subscriber=dummy_subscriber').respond(200, "token1");
+      pushApi.openConnection(dummySubscriber);
+      pushApi.openConnection(dummySubscriber);
+      pushApi.openConnection(dummySubscriber);
+      httpBackend.flush();
 
     });
 
-    it('generate a subscriber if it is not specified', function () {
+
+    it('generates a subscriber if it is not specified', function () {
       spyOn(Math, 'random').and.returnValue(0.07);
-      connectMethod.and.returnValue({then: angular.noop});
 
-      var generatedSubscriber = pushApi.openConnection();
+      httpBackend.expectGET('/pushService?subscriber=eeeeeeeeeeeeeee').respond(200, "token1");
+      pushApi.openConnection();
+      httpBackend.flush();
 
-      expect(generatedSubscriber).toEqual('eeeeeeeeeeeeeee');
-      expect(connectMethod).toHaveBeenCalledWith(generatedSubscriber);
     });
 
-    it('generate a subscriber if it is empty string', function () {
+
+    it('generates a subscriber if it is empty string', function () {
       spyOn(Math, 'random').and.returnValue(0.07);
-      connectMethod.and.returnValue({then: angular.noop});
-
-      var generatedSubscriber = pushApi.openConnection('');
-
-      expect(generatedSubscriber).toEqual('eeeeeeeeeeeeeee');
-      expect(connectMethod).toHaveBeenCalledWith(generatedSubscriber);
+      httpBackend.expectGET('/pushService?subscriber=eeeeeeeeeeeeeee').respond(200, "token1");
+      pushApi.openConnection('');
+      httpBackend.flush();
     });
 
   });
+
+
+
 
 });

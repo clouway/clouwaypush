@@ -1,18 +1,14 @@
 /**
  * @author Stefan Dimitrov (stefan.dimitrov@clouway.com).
  */
-
 angular.module('clouway-push', [])
 
   .provider('pushApi', function () {
 
     this.subscriberLength = 15;
 
-    this.connectionMethods = {
-      connect: angular.noop,
-      bind: angular.noop,
-      unbind: angular.noop,
-      keepAlive: angular.noop
+    this.endpoints = {
+      serviceUrl: ""
     };
 
     this.timeIntervals = {
@@ -21,49 +17,16 @@ angular.module('clouway-push', [])
     };
 
     /**
-     * Set a method to call for opening of connection.
-     * The method must return a promise.
+     * Sets the backend url connection.
      *
-     * @param {function(subscriber)} method method that will be called for opening of connection.
+     * @param url the new url
      * @returns {*} the provider instance for chaining purposes.
      */
-    this.openConnectionMethod = function (method) {
-      this.connectionMethods.connect = method;
+    this.backendServiceUrl = function(url) {
+      this.endpoints.serviceUrl = url;
       return this;
     };
 
-    /**
-     * Set a method to call when binding event handler.
-     *
-     * @param {function(subscriber, eventName, correlationId)} method method that will be called.
-     * @returns {*} the provider instance for chaining purposes.
-     */
-    this.bindMethod = function (method) {
-      this.connectionMethods.bind = method;
-      return this;
-    };
-
-    /**
-     * Set a method to call when unbinding event handler.
-     *
-     * @param {function(subscriber, eventName, correlationId)} method method that will be called.
-     * @returns {*} the provider instance for chaining purposes.
-     */
-    this.unbindMethod = function (method) {
-      this.connectionMethods.unbind = method;
-      return this;
-    };
-
-    /**
-     * Set a method to call for sending a keepAlive.
-     *
-     * @param {function(subscriber)} method method that will be called.
-     * @returns {*} the provider instance for chaining purposes.
-     */
-    this.keepAliveMethod = function (method) {
-      this.connectionMethods.keepAlive = method;
-      return this;
-    };
 
     /**
      * Set a time interval for sending a keepAlive.
@@ -87,10 +50,10 @@ angular.module('clouway-push', [])
       return this;
     };
 
-    this.$get = function ($rootScope, $interval, $timeout, $window) {
+    this.$get = function ($rootScope, $interval, $timeout, $window, $http) {
       var subscriberLength = this.subscriberLength;
-      var connectionMethods = this.connectionMethods;
       var timeIntervals = this.timeIntervals;
+      var endpoints = this.endpoints;
       var boundEvents = {};
       var channelSubscriber;
       var keepAliveInterval;
@@ -149,21 +112,46 @@ angular.module('clouway-push', [])
 
       var subscribeForEvent = function (eventName, correlationId) {
         var subscriber = service.openConnection();
-        connectionMethods.bind(subscriber, eventName, correlationId);
+        var params = {
+          subscriber: subscriber,
+          eventName: eventName,
+          correlationId: correlationId
+        };
+
+        // Used for testing purposes only.
+        if (!endpoints.serviceUrl || endpoints.serviceUrl === '') {
+          return;
+        }
+        $http.put(endpoints.serviceUrl, '', {params: params}).then(function (data) {
+
+        });
       };
 
       var unsubscribeFromEvent = function (eventName, correlationId) {
-        connectionMethods.unbind(channelSubscriber, eventName, correlationId);
+        var params = {subscriber: channelSubscriber, eventName: eventName, correlationId: correlationId};
+
+        // Used for testing purposes only.
+        if (!endpoints.serviceUrl || endpoints.serviceUrl === '') {
+          return;
+        }
+        $http['delete'](endpoints.serviceUrl, {params: params}).then(function(data) {
+
+        });
       };
 
       var keepAlive = function () {
-        connectionMethods.keepAlive(channelSubscriber);
+        var params = {subscriber: channelSubscriber};
+        $http.post(endpoints.serviceUrl, '', {params: params}).then(function(data) {
+
+        });
       };
 
 
       var establishConnection = function () {
-        connectionMethods.connect(channelSubscriber).then(function (token) {
-          openChannel(token);
+        var params = {subscriber: channelSubscriber};
+        $http.get(endpoints.serviceUrl, {params: params}).then(function (response) {
+          openChannel(response.data);
+
           if (!keepAliveInterval) { // Create only if there is no existing interval set.
             keepAliveInterval = $interval(keepAlive, timeIntervals.keepAlive * 1000);
           }
@@ -300,47 +288,10 @@ angular.module('clouway-push', [])
     var keepAliveInterval = 30; //in seconds
     var reconnectInterval = 10; //in seconds
 
-    var injector = angular.injector(['ng']);
-    var $http = injector.get('$http');
-    var $q = injector.get('$q');
-
-    /**
-     * Helper function to return a promise with the $http response.data field.
-     *
-     * @param {Promise} httpPromise a promise object from the $http service
-     * @returns {Promise} a promise which resolves(or rejects) to the response.data object from the $http promise.
-     */
-    function dataPromise(httpPromise) {
-      var deferred = $q.defer();
-
-      httpPromise.then(function (response) {
-        deferred.resolve(response.data);
-      }, function (response) {
-        deferred.reject(response.data);
-      });
-
-      return deferred.promise;
-    }
-
-    pushApiProvider.keepAliveTimeInterval(keepAliveInterval)
-      .reconnectTimeInterval(reconnectInterval)
-      .openConnectionMethod(function (subscriber) {
-        var params = {subscriber: subscriber};
-        return dataPromise($http.get(backendServiceUrl, {params: params}));
-    })
-      .bindMethod(function (subscriber, eventName, correlationId) {
-        var params = {subscriber: subscriber, eventName: eventName, correlationId: correlationId};
-        return dataPromise($http.put(backendServiceUrl, '', {params: params}));
-      })
-      .unbindMethod(function (subscriber, eventName, correlationId) {
-        var params = {subscriber: subscriber, eventName: eventName, correlationId: correlationId};
-        return dataPromise($http['delete'](backendServiceUrl, {params: params}));
-      })
-      .keepAliveMethod(function (subscriber) {
-        var params = {subscriber: subscriber};
-        return dataPromise($http.post(backendServiceUrl, '', {params: params}));
-      })
-    ;
+    pushApiProvider
+            .backendServiceUrl(backendServiceUrl)
+            .keepAliveTimeInterval(keepAliveInterval)
+            .reconnectTimeInterval(reconnectInterval);
   })
 
 ;
