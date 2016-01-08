@@ -39,15 +39,18 @@ public class MemcacheSubscriptionsRepositoryTest {
           .expires(afterOneMinute())
           .build();
 
+  private final DateTime currentDate = new DateTime();
+
   @Before
   public void setUp() {
     helper.setUp();
 
     final Integer subscriptionsExpiration = 10000;
+
     repository = new MemcacheSubscriptionsRepository(
             MemcacheServiceFactory.getMemcacheService(),
             Providers.of(subscriptionsExpiration),
-            Providers.of(new DateTime())
+            Providers.of(currentDate)
     );
   }
 
@@ -117,6 +120,30 @@ public class MemcacheSubscriptionsRepositoryTest {
 
     assertThat(simpleEventSubscriptions.size(), is(1));
     assertThat(anotherEventSubscriptions.size(), is(0));
+  }
+
+
+  @Test
+  public void expiredEventSubscriptionsAreNotReturnedForNotification() {
+    DateTime fiveMinutesInThePast = currentDate.plusMinutes(-5);
+
+    storeSubscriptions(
+            aNewSubscription()
+                    .subscriber("user1@user.com")
+                    .eventType(SimpleEvent.TYPE)
+                    .expires(afterOneMinute())
+                    .build(),
+            aNewSubscription()
+                    .subscriber("user2@user.com")
+                    .eventType(SimpleEvent.TYPE)
+                    .expires(fiveMinutesInThePast)
+                    .build()
+
+    );
+
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.size(), is(equalTo(1)));
+    assertThat(subscriptions.get(0).getSubscriber(),is("user1@user.com"));
   }
 
   @Test

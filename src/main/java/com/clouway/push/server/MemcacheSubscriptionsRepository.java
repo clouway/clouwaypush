@@ -91,21 +91,16 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
     log.info("Event type: " + type.getKey());
 
     final DateTime now = currentDate.get();
-    Map<String, Subscription> subscriptions = safeStoreOrUpdate(type.getKey(),
-            new Function<Map<String, Subscription>, Map<String, Subscription>>() {
 
-              @Override
-              public Map<String, Subscription> apply(Map<String, Subscription> subscriptions) {
+    Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(type.getKey());
 
-                for (Entry<String, Subscription> each : subscriptions.entrySet()) {
-                  if (!each.getValue().isActive(now)) {
-                    subscriptions.remove(each.getKey());
-                  }
-                }
+    for (Entry<String, Subscription> each : subscriptions.entrySet()) {
 
-                return subscriptions;
-              }
-            });
+      // Keep alive ensures that these entries will be deleted.
+      if (!each.getValue().isActive(now)) {
+        subscriptions.remove(each.getKey());
+      }
+    }
 
     return Lists.newArrayList(subscriptions.values());
   }
