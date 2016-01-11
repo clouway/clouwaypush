@@ -17,7 +17,6 @@ import com.google.inject.name.Named;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -94,15 +93,15 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
 
     Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(type.getKey());
 
-    for (Entry<String, Subscription> each : subscriptions.entrySet()) {
-
+    List<Subscription> result = Lists.newArrayList();
+    for (Subscription each : subscriptions.values()) {
       // Keep alive ensures that these entries will be deleted.
-      if (!each.getValue().isActive(now)) {
-        subscriptions.remove(each.getKey());
+      if (each.isActive(now)) {
+        result.add(each);
       }
     }
 
-    return Lists.newArrayList(subscriptions.values());
+    return result;
   }
 
   @Override
