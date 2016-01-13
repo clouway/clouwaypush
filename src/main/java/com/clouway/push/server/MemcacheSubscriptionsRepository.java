@@ -91,9 +91,15 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
 
     final DateTime now = currentDate.get();
 
+    List<Subscription> result = Lists.newArrayList();
     Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(type.getKey());
 
-    List<Subscription> result = Lists.newArrayList();
+    //if no subscriptions return empty list
+    if(subscriptions == null){
+      return result;
+    }
+
+
     for (Subscription each : subscriptions.values()) {
       // Keep alive ensures that these entries will be deleted.
       if (each.isActive(now)) {
@@ -137,11 +143,6 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
       }
     });
 
-  }
-
-  @SuppressWarnings("unchecked")
-  private Map<String, Subscription> getSubscriptions(String key) {
-    return (Map<String, Subscription>) memcacheService.get(key);
   }
 
   @SuppressWarnings("unchecked")

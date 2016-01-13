@@ -71,6 +71,12 @@ public class MemcacheSubscriptionsRepositoryTest {
   }
 
   @Test
+  public void noSubscribersAreSubscribedToSingleEvent() throws Exception {
+    List<Subscription> subscriptions = repository.findSubscriptions(SimpleEvent.TYPE);
+    assertThat(subscriptions.size(), is(0));
+  }
+
+  @Test
   public void singleSubscriberIsSubscribedToMultipleEvents() {
     storeSubscriptions(
             aNewSubscription().subscriber("peter@gmail.com").eventType(SimpleEvent.TYPE).expires(afterOneMinute()).build(),
