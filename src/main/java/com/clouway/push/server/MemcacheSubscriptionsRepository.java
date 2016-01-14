@@ -6,9 +6,9 @@ import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheService.CasValues;
 import com.google.appengine.api.memcache.MemcacheService.IdentifiableValue;
-import com.google.appengine.repackaged.com.google.api.client.util.Maps;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -66,6 +66,43 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
         return input;
       }
     });
+  }
+
+  @Override
+  public void put(final String subscriber, final List<Subscription> subscriptions) {
+    final Set<String> events = Sets.newHashSet();
+
+    safeStoreOrUpdate(subscriber, new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          input = Maps.newHashMap();
+        }
+
+        for (Subscription subscription : subscriptions) {
+          input.put(subscription.getEventName(), subscription);
+          events.add(subscription.getEventName());
+        }
+
+        return input;
+      }
+    });
+
+    bulkStoreOrUpdate(events, new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+      @Override
+      public Map<String, Subscription> apply(Map<String, Subscription> input) {
+        if (input == null) {
+          input = Maps.newHashMap();
+        }
+
+        for (Subscription subscription : subscriptions) {
+          input.put(subscriber, subscription);
+        }
+
+        return input;
+      }
+    });
+
   }
 
   @Override
@@ -177,6 +214,53 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
     }
 
     throw new UpdateFailedException(String.format("The update of key %s was failed due timeout.", key));
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K, V> Map<K, V> bulkStoreOrUpdate(Collection<K> keys, Function<V, V> func) {
+    return bulkStoreOrUpdate(MAX_RETRIES, subscriptionsExpiration.get(), keys, func);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K, V> Map<K, V> bulkStoreOrUpdate(int maxRetryCount, int cacheTime, Collection<K> keys, Function<V, V> func) {
+    for (int retry = 0; retry < maxRetryCount; retry++) {
+      Map<K, IdentifiableValue> identifiables = memcacheService.getIdentifiables(keys);
+
+      if (identifiables.isEmpty()) {
+        Map<K, V> result = Maps.newHashMap();
+        for (K key : keys) {
+          result.put(key, func.apply(null));
+        }
+        memcacheService.putAll(result);
+        return result;
+      }
+
+      Map<K, CasValues> updateMap = Maps.newHashMap();
+      Map<K, V> result = Maps.newHashMap();
+
+      for (K each : identifiables.keySet()) {
+        V v = (V) identifiables.get(each).getValue();
+        result.put(each, func.apply(v));
+
+        updateMap.put(each, new CasValues(identifiables.get(each), v));
+      }
+
+      Set<K> updated = memcacheService.putIfUntouched(updateMap, Expiration.byDeltaMillis(cacheTime));
+
+      // If all items are updated, we tell the caller that everything is fine.
+      if (updated.size() == identifiables.size()) {
+        return result;
+      }
+
+      // Wait a little bit before next retry
+      try {
+        Thread.sleep(5);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    throw new UpdateFailedException(String.format("The update of keys %s was failed due timeout.", keys));
   }
 
   private <K, V> Map<K, V> bulkUpdate(Collection<K> keys, Function<V, V> func) {

@@ -6,6 +6,7 @@ import com.clouway.push.shared.PushEvent;
 import com.clouway.push.shared.PushEventHandler;
 import com.clouway.push.shared.util.DateTime;
 import com.google.appengine.labs.repackaged.com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.google.inject.util.Providers;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
@@ -20,6 +21,7 @@ import java.util.List;
 import static com.clouway.push.server.EventTypeMatcher.isType;
 import static com.clouway.push.server.Subscription.aNewSubscription;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -52,19 +54,35 @@ public class PushChannelServiceImplTest {
   }
 
   @Test
-  public void subscribeForEvent() {
+  public void subscribeForEvents() {
+
+    final InstanceCapture<List<Subscription>> subscriptionsCapture = new InstanceCapture<List<Subscription>>();
+    SimpleEvent simpleEvent = new SimpleEvent();
+    CorrelationEvent correlationEvent = new CorrelationEvent();
+    correlationEvent.TYPE.setCorrelationId("12345");
+
+    List<PushEvent.Type> eventTypes = Lists.<PushEvent.Type>newArrayList(simpleEvent.TYPE, correlationEvent.TYPE);
 
     context.checking(new Expectations() {{
-      oneOf(repository).put(with(subscriptionCapture));
+      oneOf(repository).put(with(subscriber), with(subscriptionsCapture));
     }});
 
-    pushChannelService.subscribe(subscriber, event.TYPE);
+    pushChannelService.subscribe(subscriber, eventTypes);
 
-    Subscription subscription = subscriptionCapture.getValue();
+    List<Subscription> subscriptions = subscriptionsCapture.getValue();
+    assertThat(subscriptions, is(notNullValue()));
+    assertThat(subscriptions.size(), is(2));
 
+    Subscription subscription = subscriptions.get(0);
     assertThat(subscription.getSubscriber(), is(subscriber));
     assertThat(subscription.getEventName(), is("SimpleEvent"));
     assertThat(subscription.getEventType(), isType(event.getAssociatedType()));
+    assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
+
+    subscription = subscriptions.get(1);
+    assertThat(subscription.getSubscriber(), is(subscriber));
+    assertThat(subscription.getEventName(), is("CorrelationEvent12345"));
+    assertThat(subscription.getEventType(), isType(correlationEvent.getAssociatedType()));
     assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
   }
 
@@ -95,6 +113,20 @@ public class PushChannelServiceImplTest {
 
     private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {
     };
+
+    @Override
+    public Type<PushEventHandler> getAssociatedType() {
+      return TYPE;
+    }
+
+    @Override
+    public void dispatch(PushEventHandler handler) {
+    }
+  }
+
+  private class CorrelationEvent extends PushEvent<PushEventHandler> {
+
+    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("CorrelationEvent");
 
     @Override
     public Type<PushEventHandler> getAssociatedType() {

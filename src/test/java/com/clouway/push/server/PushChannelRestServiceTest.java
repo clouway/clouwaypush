@@ -2,6 +2,7 @@ package com.clouway.push.server;
 
 import com.clouway.push.client.channelapi.PushChannelService;
 import com.clouway.push.shared.PushEvent;
+import com.google.common.collect.Lists;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
 import org.jmock.integration.junit4.JUnitRuleMockery;
@@ -13,6 +14,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -65,36 +67,50 @@ public class PushChannelRestServiceTest {
   public void subscribeForEvent() throws Exception {
     final String subscriber = "test-subscriber";
     final String eventName = "event";
-    final String correlationId = "CorrelId";
 
     context.checking(new Expectations() {{
       allowing(request).getParameter("subscriber");
       will(returnValue(subscriber));
-      allowing(request).getParameter("eventName");
-      will(returnValue(eventName));
-      allowing(request).getParameter("correlationId");
-      will(returnValue(correlationId));
+      allowing(request).getParameterValues("eventName");
+      will(returnValue(new String[]{eventName}));
 
-      oneOf(pushChannelService).subscribe(subscriber, new PushEvent.Type(eventName, correlationId));
+      oneOf(pushChannelService).subscribe(subscriber, Lists.newArrayList(new PushEvent.Type(eventName)));
     }});
 
     restService.doPut(request, response);
   }
 
   @Test
-  public void subscribeForEventWithoutCorrelationId() throws Exception {
+  public void subscribeForManyEvents() throws Exception {
     final String subscriber = "test-subscriber";
-    final String eventName = "event";
+    final String[] eventNames = {"event1", "event2", "event3"};
+    final List<PushEvent.Type> eventTypes = Lists.newArrayList(
+            new PushEvent.Type("event1"),
+            new PushEvent.Type("event2"),
+            new PushEvent.Type("event3")
+    );
 
     context.checking(new Expectations() {{
       allowing(request).getParameter("subscriber");
       will(returnValue(subscriber));
-      allowing(request).getParameter("eventName");
-      will(returnValue(eventName));
-      allowing(request).getParameter("correlationId");
-      will(returnValue(null));
+      allowing(request).getParameterValues("eventName");
+      will(returnValue(eventNames));
 
-      oneOf(pushChannelService).subscribe(subscriber, new PushEvent.Type(eventName, ""));
+      oneOf(pushChannelService).subscribe(subscriber, eventTypes);
+    }});
+
+    restService.doPut(request, response);
+  }
+
+  @Test
+  public void subscribeNoEvents() throws Exception {
+    final String subscriber = "test-subscriber";
+
+    context.checking(new Expectations() {{
+      allowing(request).getParameter("subscriber");
+      will(returnValue(subscriber));
+      allowing(request).getParameterValues("eventName");
+      will(returnValue(null));
     }});
 
     restService.doPut(request, response);

@@ -55,8 +55,12 @@ angular.module('clouway-push', [])
       var timeIntervals = this.timeIntervals;
       var endpoints = this.endpoints;
       var boundEvents = {};
+      var pendingBulkBindings = [];
+      var pendingInitialBindings = [];
       var channelSubscriber;
       var keepAliveInterval;
+
+      var initialFlushTimeout;
 
       var service = {};
 
@@ -110,21 +114,23 @@ angular.module('clouway-push', [])
         };
       };
 
-      var subscribeForEvent = function (eventName, correlationId) {
+      var subscribeForEvents = function (events) {
         var subscriber = service.openConnection();
         var params = {
           subscriber: subscriber,
-          eventName: eventName,
-          correlationId: correlationId
+          eventName: events
         };
 
         // Used for testing purposes only.
         if (!endpoints.serviceUrl || endpoints.serviceUrl === '') {
           return;
         }
-        $http.put(endpoints.serviceUrl, '', {params: params}).then(function (data) {
 
-        });
+        if (events.length) {
+          $http.put(endpoints.serviceUrl, '', {params: params}).then(function (data) {
+
+          });
+        }
       };
 
       var unsubscribeFromEvent = function (eventName, correlationId) {
@@ -186,8 +192,8 @@ angular.module('clouway-push', [])
       /**
        * Fire a push event
        *
-       * @param {string} event event to be fired
-       * @param {Object} data data object of the event
+       * @param {string} event event to be fired.
+       * @param {Object} data data object of the event.
        */
       service.fireEvent = function (event, data) {
         var eventData = angular.extend({event: event}, data);
@@ -197,9 +203,9 @@ angular.module('clouway-push', [])
       /**
        * Bind handler to push event.
        *
-       * @param {String} eventName name of the push event to which to bind the handler
-       * @param {Function} handler handler to be called when the event occurs
-       * @returns {Function} the bound handler
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
        */
       service.bind = function (eventName, handler) {
         return service.bindId(eventName, '', handler);
@@ -208,29 +214,102 @@ angular.module('clouway-push', [])
       /**
        * Bind handler to push event.
        *
-       * @param {String} eventName name of the push event to which to bind the handler
-       * @param {String} correlationId additional Id for the event
-       * @param {Function} handler handler to be called when the event occurs
-       * @returns {Function} the bound handler
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {String} correlationId additional Id for the event.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
        */
       service.bindId = function (eventName, correlationId, handler) {
-        if (!correlationId) {
-          correlationId = '';
-        }
-        var eventKey = eventName + correlationId;
-        if (angular.isUndefined(boundEvents[eventKey])) {
-          boundEvents[eventKey] = [];
-        }
-
-        var eventHandler = function (data) {
-          handler(data);
-          $rootScope.$apply();
-        };
-
-        subscribeForEvent(eventName, correlationId);
-        boundEvents[eventKey].push(eventHandler);
+        var singlePending = [];
+        // Add binding to temp list and flush it immediately
+        var eventHandler = addPendingBinding(singlePending, eventName, correlationId, handler);
+        flushPendingBindings(singlePending);
 
         return eventHandler;
+      };
+
+      /**
+       * Add binding of push event handler to pending bulk.
+       * After flushing all bindings from bulk will be applied at once.
+       *
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
+       */
+      service.bulkBind = function (eventName, handler) {
+        return service.bulkBindId(eventName, '', handler);
+      };
+
+      /**
+       * Add binding of push event handler to pending bulk.
+       * After flushing all bindings from bulk will be applied at once.
+       *
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {String} correlationId additional Id for the event.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
+       */
+      service.bulkBindId = function (eventName, correlationId, handler) {
+        return addPendingBinding(pendingBulkBindings, eventName, correlationId, handler);
+      };
+
+      /**
+       * Flush all pending bulk bindings.
+       */
+      service.flushBulkBind = function () {
+        // If there are initial bindings the flush of bulk will be done later with them.
+        if (pendingInitialBindings.length) {
+          return;
+        }
+        flushPendingBindings(pendingBulkBindings);
+      };
+
+      /**
+       * Add binding of push event handler to pending initial bindings.
+       * After the main application initiates, all the added bindings will be applied at once.
+       *
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
+       */
+      service.initialBind = function (eventName, handler) {
+        return service.initialBindId(eventName, '', handler);
+      };
+
+      /**
+       * Add binding of push event handler to pending initial bindings.
+       * After the main application initiates, all the added bindings will be applied at once.
+       *
+       * @param {String} eventName name of the push event to which to bind the handler.
+       * @param {String} correlationId additional Id for the event.
+       * @param {Function} handler handler to be called when the event occurs.
+       * @returns {Function} the bound handler.
+       */
+      service.initialBindId = function (eventName, correlationId, handler) {
+        var boundHandler = addPendingBinding(pendingInitialBindings, eventName, correlationId, handler);
+
+        // Set initial flush
+        if (angular.isUndefined(initialFlushTimeout)) {
+          initialFlushTimeout = $timeout(function () {
+            // Flush the combined initial and bulk bindings
+            flushPendingBindings(pendingInitialBindings.concat(pendingBulkBindings));
+
+            // Clear both bindings lists
+            pendingInitialBindings.splice(0, pendingInitialBindings.length);
+            pendingBulkBindings.splice(0, pendingBulkBindings.length);
+          });
+        }
+
+        return boundHandler;
+      };
+
+      /**
+       * Return whether there are any pending bulk bindings.
+       *
+       * @returns {boolean}
+       */
+      service.isBulkBindPending = function () {
+        return pendingBulkBindings.length > 0;
       };
 
       /**
@@ -278,6 +357,61 @@ angular.module('clouway-push', [])
           delete boundEvents[eventKey];
         }
       };
+
+      /**
+       * Add pending event binding to the specified bindings list.
+       *
+       * @param {Array} pendingBindings the list to add pending event bindings to.
+       * @param {String} eventName name of the push event to which to bind the handler
+       * @param {String} correlationId additional Id for the event
+       * @param {Function} handler handler to be called when the event occurs
+       * @returns {Function} the bound handler
+       */
+      function addPendingBinding (pendingBindings, eventName, correlationId, handler) {
+        if (!correlationId) {
+          correlationId = '';
+        }
+        var eventKey = eventName + correlationId;
+
+        var eventHandler = function (data) {
+          handler(data);
+          $rootScope.$apply();
+        };
+
+        pendingBindings.push({eventKey: eventKey, handler: eventHandler});
+
+        return eventHandler;
+      }
+
+      /**
+       * Flush all pending bindings from the specified list.
+       *
+       * @param {Array} pendingBindings the list of pending bindings to flush.
+       */
+      function flushPendingBindings (pendingBindings) {
+        // Do nothing if bindings list is empty
+        if (!pendingBindings.length) {
+          return;
+        }
+
+        var uniqueEventsList = [];
+        angular.forEach(pendingBindings, function (each) {
+          var eventKey = each.eventKey;
+
+          if (!(eventKey in boundEvents)) {
+            boundEvents[eventKey] = [];
+
+            // Only add events that haven't been subscribed for
+            uniqueEventsList.push(eventKey);
+          }
+          // Add handler binding
+          boundEvents[eventKey].push(each.handler);
+        });
+
+        // Clear list of pending bindings
+        pendingBindings.splice(0, pendingBindings.length);
+        subscribeForEvents(uniqueEventsList);
+      }
 
       return service;
     };

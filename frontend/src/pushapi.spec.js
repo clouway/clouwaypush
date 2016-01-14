@@ -6,20 +6,18 @@ describe('PushApi', function () {
 
   beforeEach(module('clouway-push'));
 
-  var pushApi, socket, rootScope;
+  var pushApi, socket;
   var subscriber = 'test-subscriber';
   var channelToken = 'fake-channel-token';
-  var $window = {};
 
-  describe('after established connection ', function () {
+  describe('after established connection', function () {
      var httpBackend;
-     var keepAliveInterval = 5; //in seconds
      var callback1, callback2, callback3;
 
      beforeEach(function () {
        module(function (pushApiProvider) {
          pushApiProvider
-                 .keepAliveTimeInterval(keepAliveInterval)
+                 .keepAliveTimeInterval(5)
                  .backendServiceUrl("/pushService");
        });
 
@@ -63,8 +61,6 @@ describe('PushApi', function () {
     it('subscribes for single event multiple times', function () {
       var eventName = 'fake-event';
 
-      expectBindCall(eventName);
-      expectBindCall(eventName);
       expectBindCall(eventName);
 
       pushApi.bind(eventName, callback1);
@@ -121,8 +117,6 @@ describe('PushApi', function () {
     it('not call non-bound event handlers', function () {
       var eventName = 'fake-event';
 
-      expectBindCall(eventName);
-      expectBindCall(eventName);
       expectBindCall(eventName);
 
       var boundCallback1 = pushApi.bind(eventName, callback1);
@@ -184,8 +178,6 @@ describe('PushApi', function () {
       var eventName = 'fake-event';
 
       expectBindCall(eventName);
-      expectBindCall(eventName);
-      expectBindCall(eventName);
 
       expectUnbindCall(eventName);
 
@@ -214,7 +206,6 @@ describe('PushApi', function () {
 
       expectBindCall(eventName, correlationIdB);
       expectBindCall(eventName, correlationIdA);
-      expectBindCall(eventName, correlationIdB);
 
       expectUnbindCall(eventName, correlationIdB);
 
@@ -241,7 +232,6 @@ describe('PushApi', function () {
 
       expectBindCall(eventName);
       expectBindCall(eventName, correlationIdA);
-      expectBindCall(eventName);
       expectUnbindCall(eventName);
 
       pushApi.bind(eventName, callback1);
@@ -265,7 +255,6 @@ describe('PushApi', function () {
       var eventName = 'fake-event';
 
       expectBindCall(eventName);
-      expectBindCall(eventName);
       expectUnbindCall(eventName);
 
       var callback1 = angular.noop;
@@ -284,7 +273,6 @@ describe('PushApi', function () {
       var eventName = 'fake-event';
       var correlationId = 'id-12345';
 
-      expectBindCall(eventName, correlationId);
       expectBindCall(eventName, correlationId);
       expectUnbindCall(eventName, correlationId);
 
@@ -330,17 +318,183 @@ describe('PushApi', function () {
       expect(callback1).toHaveBeenCalledWith({data: 'dummy', event: manualEvent});
     });
 
-    function expectBindCall(eventName,correlationId,response) {
+
+    describe('bulk bindings', function () {
+
+      it('bulk binds several events', function () {
+
+        pushApi.bulkBindId('eventA', 'id-12345', callback1);
+        pushApi.bulkBind('eventB', callback2);
+        pushApi.bulkBind('eventC', callback3);
+
+        httpBackend.verifyNoOutstandingRequest();
+
+        expectBulkBindCall(['eventAid-12345', 'eventB', 'eventC']);
+        pushApi.flushBulkBind();
+        httpBackend.flush();
+      });
+
+      it('binds callback only after flushing bulk', function () {
+        var eventName = 'fake-event';
+        var messageData = {event: eventName};
+
+        pushApi.bulkBind(eventName, callback1);
+
+        socket.onmessage({data: angular.toJson(messageData)});
+        expect(callback1).not.toHaveBeenCalled();
+
+        expectBulkBindCall([eventName]);
+        pushApi.flushBulkBind();
+        httpBackend.flush();
+
+        socket.onmessage({data: angular.toJson(messageData)});
+        expect(callback1).toHaveBeenCalledWith(messageData);
+      });
+
+      it('flushes bulk with no pending binds', function () {
+
+        pushApi.flushBulkBind();
+        httpBackend.verifyNoOutstandingRequest();
+      });
+
+      it('does not flush bulk when initial bindings', function () {
+
+        pushApi.bulkBind('bulk-event', callback1);
+        pushApi.initialBind('initial-event', callback2);
+
+        pushApi.flushBulkBind();
+        httpBackend.verifyNoOutstandingRequest();
+      });
+
+      it('checks for pending bulk', function () {
+
+        expect(pushApi.isBulkBindPending()).toBe(false);
+
+        pushApi.bulkBind("fake-event", angular.noop);
+        expect(pushApi.isBulkBindPending()).toBe(true);
+
+        expectBulkBindCall(['fake-event']);
+        pushApi.flushBulkBind();
+        expect(pushApi.isBulkBindPending()).toBe(false);
+
+        httpBackend.flush();
+      });
+
+      it('does not mix with regular bindings', function () {
+        pushApi.bulkBind('bulk-event1', callback1);
+        pushApi.bulkBind('bulk-event2', callback2);
+
+        expectBindCall('event3');
+        pushApi.bind('event3', callback3);
+
+        httpBackend.flush();
+        expect(pushApi.isBulkBindPending()).toBe(true);
+      });
+
+    });
+
+    describe('initial binding', function () {
+
+      var $timeout;
+      beforeEach(inject(function (_$timeout_) {
+        $timeout = _$timeout_;
+      }));
+
+      it('initial binds several events', function () {
+        pushApi.initialBindId('eventA', 'id-12345', callback1);
+        pushApi.initialBind('eventB', callback2);
+        pushApi.initialBind('eventC', callback3);
+
+        httpBackend.verifyNoOutstandingRequest();
+
+        expectBulkBindCall(['eventAid-12345', 'eventB', 'eventC']);
+        $timeout.flush(1);
+        httpBackend.flush();
+      });
+
+      it('binds callback only after flushing initials', function () {
+        var eventName = 'fake-event';
+        var messageData = {event: eventName};
+
+        pushApi.initialBind(eventName, callback1);
+
+        socket.onmessage({data: angular.toJson(messageData)});
+        expect(callback1).not.toHaveBeenCalled();
+
+        expectBulkBindCall([eventName]);
+        $timeout.flush(1);
+        httpBackend.flush();
+
+        socket.onmessage({data: angular.toJson(messageData)});
+        expect(callback1).toHaveBeenCalledWith(messageData);
+      });
+
+      it('flushes initials with no pending binds', function () {
+        $timeout.flush(1);
+        httpBackend.verifyNoOutstandingRequest();
+      });
+
+      it('flushes initials and bulk binds', function () {
+
+        pushApi.bulkBind('bulk-event', callback1);
+        pushApi.initialBind('initial-event', callback2);
+
+        expectBulkBindCall(['initial-event', 'bulk-event']);
+        $timeout.flush(1);
+        httpBackend.flush();
+
+        // Verify bulk bindings list cleared
+        expect(pushApi.isBulkBindPending()).toBe(false);
+
+        // Verify initial bindings list also cleared
+        // (because bulk binds don't flush when there are pending initial binds)
+        pushApi.bulkBind('verify-event', callback3);
+        expectBulkBindCall(['verify-event']);
+        pushApi.flushBulkBind();
+        httpBackend.flush();
+      });
+
+      it('does not mix with regular bindings', function () {
+        pushApi.initialBind('initial-event1', callback1);
+        pushApi.initialBind('initial-event2', callback2);
+
+        expectBindCall('event3');
+        pushApi.bind('event3', callback3);
+
+        httpBackend.flush();
+
+        expectBulkBindCall(['initial-event1', 'initial-event2']);
+        $timeout.flush(1);
+        httpBackend.flush();
+      });
+
+    });
+
+
+    function expectBindCall(eventName, correlationId, response) {
       if (!correlationId) {
         correlationId = "";
       }
 
+      expectBulkBindCall([eventName + correlationId], response);
+    }
+
+    function expectBulkBindCall(events, response) {
+      var queryParams = [];
+
+      angular.forEach(events, function (each) {
+        queryParams.push('eventName=' + each);
+      });
+
+      queryParams.push('subscriber=subscriber1');
+
       if (!response) {
-        httpBackend.expectPUT('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(200, "");
+        httpBackend.expectPUT('/pushService?' + queryParams.join('&')).respond(200, "");
       } else {
-        httpBackend.expectPUT('/pushService?correlationId=' + correlationId + '&eventName=' + eventName + '&subscriber=subscriber1').respond(response.status, response.body);
+        httpBackend.expectPUT('/pushService?' + queryParams.join('&')).respond(response.status, response.body);
       }
     }
+
 
     function expectUnbindCall(eventName, correlationId, response) {
       if (!correlationId) {
