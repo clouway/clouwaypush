@@ -6,7 +6,6 @@
    .config(function ($provide, pushApiProvider) {
      pushApiProvider.backendServiceUrl(''); // ensure no requests will be sent
 
-     var $timeout = angular.injector(['ngMock']).get('$timeout');
      /**
       * @ngdoc service
       * @name pushApi
@@ -15,7 +14,7 @@
       * This service is just a simple decorator for {@link clouway-push.pushApi pushApi} service
       * that decorates the "flush" method of pushApi to call $httpBackend.
       */
-     $provide.decorator('pushApi', function ($delegate) {
+     $provide.decorator('pushApi', function ($delegate, $timeout) {
        $delegate.openConnection = angular.noop; // no need to execute this logic in user's tests. If needed it can be spied on.
 
        /**
