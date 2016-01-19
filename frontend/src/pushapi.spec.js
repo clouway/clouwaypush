@@ -319,6 +319,18 @@ describe('PushApi', function () {
     });
 
 
+    it('does not bind immediately when initial bindings', function () {
+      var eventName = 'fake-event';
+
+      pushApi.initialBind('initial-event-1', callback1);
+      pushApi.initialBind('initial-event-2', callback2);
+      pushApi.bind(eventName, callback3);
+
+      httpBackend.verifyNoOutstandingRequest();
+    });
+
+
+
     describe('bulk bindings', function () {
 
       it('bulk binds several events', function () {
@@ -454,18 +466,31 @@ describe('PushApi', function () {
         httpBackend.flush();
       });
 
+      it('flushes initials and single bindings', inject(function ($timeout) {
+        var eventName = 'single-event';
+
+        pushApi.initialBind('initial-event-1', callback1);
+        pushApi.initialBind('initial-event-2', callback2);
+        pushApi.bind(eventName, callback3);
+
+        expectBulkBindCall(['initial-event-1', 'initial-event-2', eventName]);
+        $timeout.flush(1);
+        httpBackend.flush();
+
+        socket.onmessage({data: angular.toJson({event: eventName})});
+
+        expect(callback3).toHaveBeenCalledWith({event: eventName});
+      }));
+
       it('does not mix with regular bindings', function () {
-        pushApi.initialBind('initial-event1', callback1);
-        pushApi.initialBind('initial-event2', callback2);
 
         expectBindCall('event3');
         pushApi.bind('event3', callback3);
 
         httpBackend.flush();
 
-        expectBulkBindCall(['initial-event1', 'initial-event2']);
         $timeout.flush(1);
-        httpBackend.flush();
+        httpBackend.verifyNoOutstandingRequest();
       });
 
     });

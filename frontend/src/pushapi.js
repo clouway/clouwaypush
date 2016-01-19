@@ -223,7 +223,14 @@ angular.module('clouway-push', [])
         var singlePending = [];
         // Add binding to temp list and flush it immediately
         var eventHandler = addPendingBinding(singlePending, eventName, correlationId, handler);
-        flushPendingBindings(singlePending);
+
+        // Add to initial bindings list if there are any, instead of flushing directly.
+        if (pendingInitialBindings.length) {
+          pendingInitialBindings.push(singlePending[0]);
+
+        } else {
+          flushPendingBindings(singlePending);
+        }
 
         return eventHandler;
       };
