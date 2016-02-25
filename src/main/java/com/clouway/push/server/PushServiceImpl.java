@@ -19,13 +19,13 @@ class PushServiceImpl implements PushService {
   private static final Logger log = Logger.getLogger(PushServiceImpl.class.getName());
 
   private final SubscriptionsRepository subscriptions;
-  private final EncoderFactory encoderFactory;
+  private Encoder encoder;
   private final Provider<ChannelService> channelServiceProvider;
 
   @Inject
-  public PushServiceImpl(SubscriptionsRepository subscriptions, EncoderFactory encoderFactory, Provider<ChannelService> channelServiceProvider) {
+  public PushServiceImpl(SubscriptionsRepository subscriptions,  Encoder encoder, Provider<ChannelService> channelServiceProvider) {
     this.subscriptions = subscriptions;
-    this.encoderFactory = encoderFactory;
+    this.encoder = encoder;
     this.channelServiceProvider = channelServiceProvider;
   }
 
@@ -41,7 +41,6 @@ class PushServiceImpl implements PushService {
       event.getAssociatedType().setCorrelationId(correlationId);
     }
 
-    Encoder encoder = encoderFactory.create(event);
     String message = encoder.encode(event);
 
     long start = System.currentTimeMillis();

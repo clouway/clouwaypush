@@ -7,11 +7,11 @@ import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
 
 /**
@@ -19,19 +19,18 @@ import com.google.inject.servlet.ServletModule;
  */
 public class PushChannelModule extends AbstractModule {
 
-  private final String serializationPolicyDirectory;
   private int subscriptionsExpirationMinutes;
+  private final Class<? extends Encoder> encoder;
 
-  public PushChannelModule(String serializationPolicyDirectory, int subscriptionsExpirationMinutes) {
-    this.serializationPolicyDirectory = serializationPolicyDirectory;
+  public PushChannelModule(int subscriptionsExpirationMinutes, Class<? extends Encoder> encoder) {
     this.subscriptionsExpirationMinutes = subscriptionsExpirationMinutes;
+    this.encoder = encoder;
   }
 
   @Override
   protected final void configure() {
 
     bind(PushService.class).to(PushServiceImpl.class).in(Singleton.class);
-    bind(String.class).annotatedWith(Names.named("SerializationPolicyDirectory")).toInstance(serializationPolicyDirectory);
     bind(SubscriptionsRepository.class).to(MemcacheSubscriptionsRepository.class);
 
     install(new ServletModule() {
@@ -62,21 +61,15 @@ public class PushChannelModule extends AbstractModule {
   }
 
   @Provides
+  @Singleton
+  public Encoder getEncoder(Injector injector) {
+    return injector.getInstance(encoder);
+  }
+
+  @Provides
   @Named("MemcacheService")
   MemcacheService getMemcacheService() {
     return MemcacheServiceFactory.getMemcacheService();
-  }
-
-  @Provides
-  @Singleton
-  public Encoder getEncoder(@Named("SerializationPolicyDirectory") String serializationPolicyDirectory) {
-    return new RpcEncoder(serializationPolicyDirectory);
-  }
-
-  @Provides
-  public EncoderFactory getEncoderFactory() {
-    JsonEncoder jsonEncoder = new JsonEncoder();
-    return new GenericEncoderFactory(jsonEncoder, jsonEncoder);
   }
 
   @Provides

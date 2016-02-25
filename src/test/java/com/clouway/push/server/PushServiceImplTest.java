@@ -25,9 +25,6 @@ public class PushServiceImplTest {
   private SubscriptionsRepository repository;
 
   @Mock
-  private EncoderFactory encoderFactory;
-
-  @Mock
   private Encoder encoder;
 
   @Mock
@@ -37,7 +34,7 @@ public class PushServiceImplTest {
 
   @Before
   public void setUp() throws Exception {
-    pushService = new PushServiceImpl(repository, encoderFactory, Providers.of(channelService));
+    pushService = new PushServiceImpl(repository, encoder, Providers.of(channelService));
   }
 
   @Test
@@ -50,9 +47,6 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
-      oneOf(encoderFactory).create(event);
-      will(returnValue(encoder));
-
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
 
@@ -79,8 +73,6 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
-      oneOf(encoderFactory).create(event);
-      will(returnValue(encoder));
 
       oneOf(encoder).encode(event);
       will(returnValue(eventMessage));
