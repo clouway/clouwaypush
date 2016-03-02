@@ -19,13 +19,13 @@ class PushServiceImpl implements PushService {
   private static final Logger log = Logger.getLogger(PushServiceImpl.class.getName());
 
   private final SubscriptionsRepository subscriptions;
-  private Encoder encoder;
+  private EventSerializer eventSerializer;
   private final Provider<ChannelService> channelServiceProvider;
 
   @Inject
-  public PushServiceImpl(SubscriptionsRepository subscriptions,  Encoder encoder, Provider<ChannelService> channelServiceProvider) {
+  public PushServiceImpl(SubscriptionsRepository subscriptions, EventSerializer eventSerializer, Provider<ChannelService> channelServiceProvider) {
     this.subscriptions = subscriptions;
-    this.encoder = encoder;
+    this.eventSerializer = eventSerializer;
     this.channelServiceProvider = channelServiceProvider;
   }
 
@@ -41,7 +41,7 @@ class PushServiceImpl implements PushService {
       event.getAssociatedType().setCorrelationId(correlationId);
     }
 
-    String message = encoder.encode(event);
+    String message = eventSerializer.serialize(event);
 
     long start = System.currentTimeMillis();
     List<Subscription> subscriptions = this.subscriptions.findSubscriptions(event.getAssociatedType());

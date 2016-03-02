@@ -20,9 +20,9 @@ import com.google.inject.servlet.ServletModule;
 public class PushChannelModule extends AbstractModule {
 
   private int subscriptionsExpirationMinutes;
-  private final Class<? extends Encoder> encoder;
+  private final Class<? extends EventSerializer> encoder;
 
-  public PushChannelModule(int subscriptionsExpirationMinutes, Class<? extends Encoder> encoder) {
+  public PushChannelModule(int subscriptionsExpirationMinutes, Class<? extends EventSerializer> encoder) {
     this.subscriptionsExpirationMinutes = subscriptionsExpirationMinutes;
     this.encoder = encoder;
   }
@@ -62,7 +62,7 @@ public class PushChannelModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Encoder getEncoder(Injector injector) {
+  public EventSerializer getEncoder(Injector injector) {
     return injector.getInstance(encoder);
   }
 

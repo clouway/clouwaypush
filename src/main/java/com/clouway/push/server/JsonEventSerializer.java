@@ -12,11 +12,11 @@ import com.google.gson.JsonObject;
  *
  * @author Miroslav Genov (miroslav.genov@clouway.com)
  */
-class JsonEncoder implements Encoder {
+class JsonEventSerializer implements EventSerializer {
   private static final Gson gson = new GsonBuilder().create();
 
   @Override
-  public String encode(PushEvent event) {
+  public String serialize(PushEvent event) {
     JsonElement element = gson.toJsonTree(event);
     JsonObject jsonObject = element.getAsJsonObject();
     jsonObject.addProperty("event", event.getAssociatedType().getKey());

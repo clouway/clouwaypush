@@ -25,7 +25,7 @@ public class PushServiceImplTest {
   private SubscriptionsRepository repository;
 
   @Mock
-  private Encoder encoder;
+  private EventSerializer eventSerializer;
 
   @Mock
   private ChannelService channelService;
@@ -34,7 +34,7 @@ public class PushServiceImplTest {
 
   @Before
   public void setUp() throws Exception {
-    pushService = new PushServiceImpl(repository, encoder, Providers.of(channelService));
+    pushService = new PushServiceImpl(repository, eventSerializer, Providers.of(channelService));
   }
 
   @Test
@@ -47,7 +47,7 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
-      oneOf(encoder).encode(event);
+      oneOf(eventSerializer).serialize(event);
       will(returnValue(eventMessage));
 
       oneOf(repository).findSubscriptions(event.getAssociatedType());
@@ -74,7 +74,7 @@ public class PushServiceImplTest {
 
     context.checking(new Expectations() {{
 
-      oneOf(encoder).encode(event);
+      oneOf(eventSerializer).serialize(event);
       will(returnValue(eventMessage));
 
       oneOf(repository).findSubscriptions(event.getAssociatedType());

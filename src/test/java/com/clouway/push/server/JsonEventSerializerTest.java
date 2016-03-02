@@ -12,18 +12,18 @@ import static org.junit.Assert.*;
 /**
  * @author Miroslav Genov (miroslav.genov@clouway.com)
  */
-public class JsonEncoderTest {
-  JsonEncoder encoder = new JsonEncoder();
+public class JsonEventSerializerTest {
+  JsonEventSerializer encoder = new JsonEventSerializer();
 
   @Test
   public void happyPath() {
-    String json = encoder.encode(new AddPersonEvent("John", 12));
+    String json = encoder.serialize(new AddPersonEvent("John", 12));
     assertThat(json, is(equalTo("{\"name\":\"John\",\"age\":12,\"event\":\"addPersonEvent\"}")));
   }
 
   @Test
   public void anotherEvent() {
-    String json = encoder.encode(new RemovePersonEvent(12));
+    String json = encoder.serialize(new RemovePersonEvent(12));
     assertThat(json, is(equalTo("{\"personId\":12,\"event\":\"removePersonEvent\"}")));
   }
 

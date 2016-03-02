@@ -7,7 +7,7 @@ import com.clouway.push.shared.PushEvent;
  *
  * @author Georgi Georgiev (GeorgievJon@gmail.com)
  */
-interface Encoder {
+public interface EventSerializer {
 
   /**
    * Encodes the provided event as String value.
@@ -15,6 +15,6 @@ interface Encoder {
    * @param event the event that needs to be encoded
    * @return the encoded value of event
    */
-  String encode(PushEvent event);
+  String serialize(PushEvent event);
 
 }

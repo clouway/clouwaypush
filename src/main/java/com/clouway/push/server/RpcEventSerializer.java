@@ -19,24 +19,24 @@ import java.util.List;
  *
  * @author Georgi Georgiev (GeorgievJon@gmail.com)
  */
-class RpcEncoder implements Encoder {
+class RpcEventSerializer implements EventSerializer {
 
   private String serializationPolicyDirectory;
 
   private SerializationPolicy serializationPolicy;
 
-  public RpcEncoder(String serializationPolicyDirectory) {
+  public RpcEventSerializer(String serializationPolicyDirectory) {
     this.serializationPolicyDirectory = serializationPolicyDirectory;
     serializationPolicy = getSerializationPolicy();
   }
 
   @Override
-  public String encode(PushEvent event) {
+  public String serialize(PushEvent event) {
 
     try {
       return RPC.encodeResponseForSuccess(getDummyMethod(), event, serializationPolicy);
     } catch (SerializationException e) {
-      throw new RuntimeException("Unable to encode a message for push.\n" + event.getAssociatedType(), e);
+      throw new RuntimeException("Unable to serialize a message for push.\n" + event.getAssociatedType(), e);
     }
   }
 
@@ -48,7 +48,7 @@ class RpcEncoder implements Encoder {
 
   private Method getDummyMethod() {
     try {
-      return RpcEncoder.class.getDeclaredMethod("dummyMethod");
+      return RpcEventSerializer.class.getDeclaredMethod("dummyMethod");
     } catch (NoSuchMethodException e) {
       throw new RuntimeException("Unable to find the dummy RPC method.");
     }
