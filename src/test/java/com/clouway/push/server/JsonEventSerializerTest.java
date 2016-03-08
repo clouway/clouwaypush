@@ -17,14 +17,20 @@ public class JsonEventSerializerTest {
 
   @Test
   public void happyPath() {
-    String json = encoder.serialize(new AddPersonEvent("John", 12));
-    assertThat(json, is(equalTo("{\"name\":\"John\",\"age\":12,\"event\":\"addPersonEvent\"}")));
+    String json = encoder.serialize(new PushEventSource(new AddPersonEvent("John", 12),""));
+    assertThat(json, is(equalTo("{\"event\":{\"name\":\"John\",\"age\":12,\"key\":\"addPersonEvent\"},\"correlationId\":\"\"}")));
   }
 
   @Test
   public void anotherEvent() {
-    String json = encoder.serialize(new RemovePersonEvent(12));
-    assertThat(json, is(equalTo("{\"personId\":12,\"event\":\"removePersonEvent\"}")));
+    String json = encoder.serialize(new PushEventSource(new RemovePersonEvent(12),""));
+    assertThat(json, is(equalTo("{\"event\":{\"personId\":12,\"key\":\"removePersonEvent\"},\"correlationId\":\"\"}")));
+  }
+
+  @Test
+  public void eventWithCorrelationId() {
+    String json = encoder.serialize(new PushEventSource(new RemovePersonEvent(12),""));
+    assertThat(json, is(equalTo("{\"event\":{\"personId\":12,\"key\":\"removePersonEvent\"},\"correlationId\":\"\"}")));
   }
 
 }

@@ -1,7 +1,6 @@
 package com.clouway.push.server;
 
-import com.clouway.push.shared.PushEvent;
-import com.clouway.push.shared.util.DateTime;
+import com.clouway.push.server.util.DateTime;
 
 import java.io.Serializable;
 
@@ -18,28 +17,15 @@ public class Subscription implements Serializable {
     return dateTime.isBefore(expirationDate);
   }
 
-  public PushEvent.Type getEventType() {
-    return eventType;
-  }
-
   public static class Builder {
-
-    private String eventName;
 
     private String subscriber;
 
     private DateTime expirationDateAndTime;
+    private String eventKey;
 
-    private PushEvent.Type type;
-
-    public Builder eventName(String eventName) {
-      this.eventName = eventName;
-      return this;
-    }
-
-    public Builder eventType(PushEvent.Type type) {
-      this.type = type;
-      eventName = type.getKey();
+    public Builder eventKey(String eventKey) {
+      this.eventKey = eventKey;
       return this;
     }
 
@@ -57,25 +43,23 @@ public class Subscription implements Serializable {
 
       Subscription subscription = new Subscription();
 
-      subscription.eventName = eventName;
+      subscription.eventKey = eventKey;
       subscription.subscriber = subscriber;
       subscription.expirationDate = expirationDateAndTime;
-      subscription.eventType = type;
 
       return subscription;
     }
   }
 
-  private PushEvent.Type eventType;
 
-  private String eventName;
+  private String eventKey;
 
   private String subscriber;
 
   private DateTime expirationDate;
 
-  public String getEventName() {
-    return eventName;
+  public String getEventKey() {
+    return eventKey;
   }
 
   public String getSubscriber() {

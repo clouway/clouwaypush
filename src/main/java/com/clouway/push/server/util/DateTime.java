@@ -1,4 +1,4 @@
-package com.clouway.push.shared.util;
+package com.clouway.push.server.util;
 
 import java.io.Serializable;
 import java.util.Date;

@@ -1,15 +1,11 @@
 package com.clouway.push.server;
 
-import com.clouway.push.client.channelapi.PushChannelService;
-import com.clouway.push.shared.PushEvent;
-import com.clouway.push.shared.util.DateTime;
+import com.clouway.push.server.util.DateTime;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.Singleton;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -19,8 +15,7 @@ import static com.clouway.push.server.Subscription.aNewSubscription;
 /**
  * @author Ivan Lazov <ivan.lazov@clouway.com>
  */
-@Singleton
-class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannelService {
+class PushChannelServiceImpl implements PushChannelService {
 
   Logger log = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -43,14 +38,14 @@ class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannel
   }
 
   @Override
-  public void subscribe(String subscriber, List<PushEvent.Type> types) {
+  public void subscribe(String subscriber, List<String> keys) {
     List<Subscription> subscriptions = Lists.newArrayList();
 
-    for (PushEvent.Type type : types) {
-      log.info("Subscribe: " + subscriber + " for event: " + type.getKey());
+    for (String key : keys) {
+      log.info("Subscribe: " + subscriber + " for event: " + key);
 
-      subscriptions.add(aNewSubscription().eventName(type.getKey())
-              .eventType(type)
+      subscriptions.add(aNewSubscription()
+              .eventKey(key)
               .subscriber(subscriber)
               .expires(expirationDate.get())
               .build());
@@ -60,19 +55,14 @@ class PushChannelServiceImpl extends RemoteServiceServlet implements PushChannel
   }
 
   @Override
-  public void unsubscribe(String subscriber, PushEvent.Type eventType) {
-    log.info("Unsubscribe: " + subscriber + " from event: " + eventType.getKey());
-    subscriptionsRepository.removeSubscriptions(eventType, Sets.newHashSet(subscriber));
+  public void unsubscribe(String subscriber, String key) {
+    log.info("Unsubscribe: " + subscriber + " from event: " + key);
+    subscriptionsRepository.removeSubscriptions(key, Sets.newHashSet(subscriber));
   }
 
   @Override
   public void keepAlive(String subscriber) {
 
     subscriptionsRepository.keepAliveTill(subscriber, expirationDate.get());
-  }
-
-  @Override
-  public PushEvent dummyMethod() {
-    return null;
   }
 }

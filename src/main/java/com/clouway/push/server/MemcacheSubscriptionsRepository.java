@@ -1,7 +1,6 @@
 package com.clouway.push.server;
 
-import com.clouway.push.shared.PushEvent;
-import com.clouway.push.shared.util.DateTime;
+import com.clouway.push.server.util.DateTime;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheService.CasValues;
@@ -51,12 +50,12 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
           input = Maps.newHashMap();
         }
 
-        input.put(subscription.getEventName(), subscription);
+        input.put(subscription.getEventKey(), subscription);
         return input;
       }
     });
 
-    safeStoreOrUpdate(subscription.getEventType().getKey(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+    safeStoreOrUpdate(subscription.getEventKey(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
       @Override
       public Map<String, Subscription> apply(Map<String, Subscription> input) {
         if (input == null) {
@@ -80,8 +79,8 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
         }
 
         for (Subscription subscription : subscriptions) {
-          input.put(subscription.getEventName(), subscription);
-          events.add(subscription.getEventName());
+          input.put(subscription.getEventKey(), subscription);
+          events.add(subscription.getEventKey());
         }
 
         return input;
@@ -106,9 +105,9 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
   }
 
   @Override
-  public void removeSubscriptions(final PushEvent.Type type, final Set<String> subscribers) {
+  public void removeSubscriptions(String key, final Set<String> subscribers) {
 
-    safeStoreOrUpdate(type.getKey(), new Function<Map<String, Subscription>, Map<String, Subscription>>() {
+    safeStoreOrUpdate(key, new Function<Map<String, Subscription>, Map<String, Subscription>>() {
       @Override
       public Map<String, Subscription> apply(Map<String, Subscription> input) {
         if (input == null) {
@@ -123,13 +122,13 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
   }
 
   @Override
-  public List<Subscription> findSubscriptions(PushEvent.Type type) {
-    log.info("Event type: " + type.getKey());
+  public List<Subscription> findSubscriptions(String key) {
+    log.info("Event type: " + key);
 
     final DateTime now = currentDate.get();
 
     List<Subscription> result = Lists.newArrayList();
-    Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(type.getKey());
+    Map<String, Subscription> subscriptions = (Map<String, Subscription>) memcacheService.get(key);
 
     //if no subscriptions return empty list
     if(subscriptions == null){
@@ -160,7 +159,7 @@ class MemcacheSubscriptionsRepository implements SubscriptionsRepository {
         }
         for (Subscription subscription : input.values()) {
           subscription.renewingTillDate(time);
-          events.add(subscription.getEventType().getKey());
+          events.add(subscription.getEventKey());
         }
 
         return input;

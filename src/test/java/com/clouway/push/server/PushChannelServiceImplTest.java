@@ -1,10 +1,7 @@
 package com.clouway.push.server;
 
 import com.clouway.push.client.InstanceCapture;
-import com.clouway.push.client.channelapi.PushChannelService;
-import com.clouway.push.shared.PushEvent;
-import com.clouway.push.shared.PushEventHandler;
-import com.clouway.push.shared.util.DateTime;
+import com.clouway.push.server.util.DateTime;
 import com.google.appengine.labs.repackaged.com.google.common.collect.Sets;
 import com.google.common.collect.Lists;
 import com.google.inject.util.Providers;
@@ -18,7 +15,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.clouway.push.server.EventTypeMatcher.isType;
 import static com.clouway.push.server.Subscription.aNewSubscription;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -41,11 +37,8 @@ public class PushChannelServiceImplTest {
   private final String subscriber = "john@gmail.com";
   private SimpleEvent event = new SimpleEvent();
 
-  private InstanceCapture<Subscription> subscriptionCapture = new InstanceCapture<Subscription>();
-
   private Subscription subscription = aNewSubscription().subscriber(subscriber)
-          .eventName("SimpleEvent")
-          .eventType(event.TYPE)
+          .eventKey("SimpleEvent")
           .build();
 
   @Before
@@ -58,16 +51,16 @@ public class PushChannelServiceImplTest {
 
     final InstanceCapture<List<Subscription>> subscriptionsCapture = new InstanceCapture<List<Subscription>>();
     SimpleEvent simpleEvent = new SimpleEvent();
+    String correlationId = "12345";
     CorrelationEvent correlationEvent = new CorrelationEvent();
-    correlationEvent.TYPE.setCorrelationId("12345");
 
-    List<PushEvent.Type> eventTypes = Lists.<PushEvent.Type>newArrayList(simpleEvent.TYPE, correlationEvent.TYPE);
+    List<String> eventKeys = Lists.newArrayList(simpleEvent.getKey(), correlationEvent.getKey() + correlationId);
 
     context.checking(new Expectations() {{
       oneOf(repository).put(with(subscriber), with(subscriptionsCapture));
     }});
 
-    pushChannelService.subscribe(subscriber, eventTypes);
+    pushChannelService.subscribe(subscriber, eventKeys);
 
     List<Subscription> subscriptions = subscriptionsCapture.getValue();
     assertThat(subscriptions, is(notNullValue()));
@@ -75,14 +68,12 @@ public class PushChannelServiceImplTest {
 
     Subscription subscription = subscriptions.get(0);
     assertThat(subscription.getSubscriber(), is(subscriber));
-    assertThat(subscription.getEventName(), is("SimpleEvent"));
-    assertThat(subscription.getEventType(), isType(event.getAssociatedType()));
+    assertThat(subscription.getEventKey(), is("SimpleEvent"));
     assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
 
     subscription = subscriptions.get(1);
     assertThat(subscription.getSubscriber(), is(subscriber));
-    assertThat(subscription.getEventName(), is("CorrelationEvent12345"));
-    assertThat(subscription.getEventType(), isType(correlationEvent.getAssociatedType()));
+    assertThat(subscription.getEventKey(), is("CorrelationEvent12345"));
     assertThat(subscription.getExpirationDate(), is(subscriptionsExpirationDate));
   }
 
@@ -90,10 +81,10 @@ public class PushChannelServiceImplTest {
   public void unsubscribeFromSubscribedEvent() {
 
     context.checking(new Expectations() {{
-      oneOf(repository).removeSubscriptions(event.TYPE, Sets.newHashSet(subscriber));
+      oneOf(repository).removeSubscriptions(event.getKey(), Sets.newHashSet(subscriber));
     }});
 
-    pushChannelService.unsubscribe(subscriber, event.TYPE);
+    pushChannelService.unsubscribe(subscriber, event.getKey());
   }
 
   @Test
@@ -109,32 +100,19 @@ public class PushChannelServiceImplTest {
     pushChannelService.keepAlive(subscriber);
   }
 
-  private class SimpleEvent extends PushEvent<PushEventHandler> {
+  private class SimpleEvent extends PushEvent {
 
-    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("SimpleEvent") {
-    };
-
-    @Override
-    public Type<PushEventHandler> getAssociatedType() {
-      return TYPE;
+    private SimpleEvent() {
+      super("SimpleEvent");
     }
 
-    @Override
-    public void dispatch(PushEventHandler handler) {
-    }
   }
 
-  private class CorrelationEvent extends PushEvent<PushEventHandler> {
+  private class CorrelationEvent extends PushEvent {
 
-    private Type<PushEventHandler> TYPE = new Type<PushEventHandler>("CorrelationEvent");
-
-    @Override
-    public Type<PushEventHandler> getAssociatedType() {
-      return TYPE;
+    private CorrelationEvent() {
+      super("CorrelationEvent");
     }
 
-    @Override
-    public void dispatch(PushEventHandler handler) {
-    }
   }
 }

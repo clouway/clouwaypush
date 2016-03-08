@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2016-01-19
+ * clouwaypush - 2016-03-08
  *
  * Copyright (c) 2016 clouWay ltd
  */
@@ -96,12 +96,13 @@ angular.module('clouway-push', [])
        * @param {Object} message
        */
       var onMessage = function (message) {
-        var messageData = message.data;
-        var eventData = angular.fromJson(messageData);
-        var handlers = boundEvents[eventData.event];
+        var eventSource = angular.fromJson(message.data);
+        var event = eventSource.event;
+        var bindingKey =  [event.key, eventSource.correlationId].join("");
+        var handlers = boundEvents[bindingKey];
 
         angular.forEach(handlers, function (handler) {
-          handler(eventData);
+          handler(event);
         });
       };
 
@@ -199,12 +200,26 @@ angular.module('clouway-push', [])
       /**
        * Fire a push event
        *
-       * @param {string} event event to be fired.
+       * Only for testing used for now
+       * @param {string} eventKey to be fired.
+       * @param {string} correlationId event correlationId
        * @param {Object} data data object of the event.
        */
-      service.fireEvent = function (event, data) {
-        var eventData = angular.extend({event: event}, data);
-        onMessage({data: eventData});
+      service.fireSpecificEvent = function (eventKey, correlationId, data) {
+        var event = angular.extend({key: eventKey}, data);
+        var eventSource = {correlationId: correlationId, event: event};
+        onMessage({data: eventSource});
+      };
+
+      /**
+       * Fire a push event
+       *
+       * Only for testing used for now
+       * @param {string} eventKey to be fired.
+       * @param {Object} data data object of the event.
+       */
+      service.fireEvent = function (eventKey, data) {
+        service.fireSpecificEvent(eventKey, "", data);
       };
 
       /**

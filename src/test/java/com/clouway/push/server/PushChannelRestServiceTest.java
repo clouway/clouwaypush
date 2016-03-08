@@ -1,7 +1,5 @@
 package com.clouway.push.server;
 
-import com.clouway.push.client.channelapi.PushChannelService;
-import com.clouway.push.shared.PushEvent;
 import com.google.common.collect.Lists;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
@@ -74,7 +72,7 @@ public class PushChannelRestServiceTest {
       allowing(request).getParameterValues("eventName");
       will(returnValue(new String[]{eventName}));
 
-      oneOf(pushChannelService).subscribe(subscriber, Lists.newArrayList(new PushEvent.Type(eventName)));
+      oneOf(pushChannelService).subscribe(subscriber, Lists.newArrayList(eventName));
     }});
 
     restService.doPut(request, response);
@@ -84,10 +82,10 @@ public class PushChannelRestServiceTest {
   public void subscribeForManyEvents() throws Exception {
     final String subscriber = "test-subscriber";
     final String[] eventNames = {"event1", "event2", "event3"};
-    final List<PushEvent.Type> eventTypes = Lists.newArrayList(
-            new PushEvent.Type("event1"),
-            new PushEvent.Type("event2"),
-            new PushEvent.Type("event3")
+    final List<String> eventTypes = Lists.newArrayList(
+            "event1",
+            "event2",
+            "event3"
     );
 
     context.checking(new Expectations() {{
@@ -130,7 +128,7 @@ public class PushChannelRestServiceTest {
       allowing(request).getParameter("correlationId");
       will(returnValue(correlationId));
 
-      oneOf(pushChannelService).unsubscribe(subscriber, new PushEvent.Type(eventName, correlationId));
+      oneOf(pushChannelService).unsubscribe(subscriber, eventName + correlationId);
     }});
 
     restService.doDelete(request, response);
@@ -149,7 +147,7 @@ public class PushChannelRestServiceTest {
       allowing(request).getParameter("correlationId");
       will(returnValue(null));
 
-      oneOf(pushChannelService).unsubscribe(subscriber, new PushEvent.Type(eventName, ""));
+      oneOf(pushChannelService).unsubscribe(subscriber, eventName);
     }});
 
     restService.doDelete(request, response);

@@ -1,14 +1,12 @@
 package com.clouway.push.server;
 
-import com.clouway.push.client.channelapi.PushChannelService;
-import com.clouway.push.shared.util.DateTime;
+import com.clouway.push.server.util.DateTime;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -36,7 +34,6 @@ public class PushChannelModule extends AbstractModule {
     install(new ServletModule() {
       @Override
       protected void configureServlets() {
-        serve("/pushChannelService").with(PushChannelServiceImpl.class);
         serve("/pushService").with(PushChannelRestService.class);
       }
     });
@@ -75,11 +72,5 @@ public class PushChannelModule extends AbstractModule {
   @Provides
   public ChannelService getChannelService() {
     return ChannelServiceFactory.getChannelService();
-  }
-
-  @Provides
-  public PushChannelService getPushChannelService(Provider<SubscriptionsRepository> subscriptionsRepository,
-                                                  @SubscriptionsExpirationDate Provider<DateTime> subscriptionsExpirationDate) {
-    return new PushChannelServiceImpl(subscriptionsRepository, subscriptionsExpirationDate);
   }
 }

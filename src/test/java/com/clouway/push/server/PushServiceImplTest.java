@@ -1,6 +1,5 @@
 package com.clouway.push.server;
 
-import com.clouway.push.shared.DefaultEvent;
 import com.google.appengine.api.channel.ChannelFailureException;
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
@@ -47,10 +46,10 @@ public class PushServiceImplTest {
     final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
 
     context.checking(new Expectations() {{
-      oneOf(eventSerializer).serialize(event);
+      oneOf(eventSerializer).serialize(new PushEventSource(event,""));
       will(returnValue(eventMessage));
 
-      oneOf(repository).findSubscriptions(event.getAssociatedType());
+      oneOf(repository).findSubscriptions(event.getKey());
       will(returnValue(Lists.newArrayList(subscription)));
 
       oneOf(channelService).sendMessage(with(channelMessageCaptor));
@@ -74,10 +73,10 @@ public class PushServiceImplTest {
 
     context.checking(new Expectations() {{
 
-      oneOf(eventSerializer).serialize(event);
+      oneOf(eventSerializer).serialize(new PushEventSource(event, ""));
       will(returnValue(eventMessage));
 
-      oneOf(repository).findSubscriptions(event.getAssociatedType());
+      oneOf(repository).findSubscriptions(event.getKey());
       will(returnValue(Lists.newArrayList(subscription)));
 
       oneOf(channelService).sendMessage(with(channelMessageCaptor));
@@ -87,4 +86,56 @@ public class PushServiceImplTest {
     pushService.pushEvent(event);
 
   }
+
+  @Test
+  public void pushEventToClientWithCorrelationId() throws Exception {
+    final DefaultEvent event = new DefaultEvent();
+    final String eventMessage = "event message";
+
+    final Subscription subscription = Subscription.aNewSubscription().subscriber("subscriber").build();
+
+    final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
+
+    context.checking(new Expectations() {{
+      oneOf(eventSerializer).serialize(new PushEventSource(event, "correlationId"));
+      will(returnValue(eventMessage));
+
+      oneOf(repository).findSubscriptions(event.getKey() + "correlationId");
+      will(returnValue(Lists.newArrayList(subscription)));
+
+      oneOf(channelService).sendMessage(with(channelMessageCaptor));
+    }});
+
+    pushService.pushEvent(event, "correlationId");
+
+    assertThat(channelMessageCaptor.getValue().getClientId(), is("subscriber"));
+    assertThat(channelMessageCaptor.getValue().getMessage(), is("event message"));
+  }
+
+  @Test(expected = UnableToPushEventException.class)
+  public void pushingEventWithCorrelationIdFails() throws Exception {
+
+    final DefaultEvent event = new DefaultEvent();
+    final String eventMessage = "event message";
+
+    final Subscription subscription = Subscription.aNewSubscription().subscriber("subscriber").build();
+
+    final ArgumentCaptor<ChannelMessage> channelMessageCaptor = new ArgumentCaptor<ChannelMessage>();
+
+    context.checking(new Expectations() {{
+
+      oneOf(eventSerializer).serialize(new PushEventSource(event,"correlationId"));
+      will(returnValue(eventMessage));
+
+      oneOf(repository).findSubscriptions(event.getKey() + "correlationId");
+      will(returnValue(Lists.newArrayList(subscription)));
+
+      oneOf(channelService).sendMessage(with(channelMessageCaptor));
+      will(throwException(new ChannelFailureException("message")));
+    }});
+
+    pushService.pushEvent(event, "correlationId");
+
+  }
+
 }

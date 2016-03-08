@@ -11,36 +11,36 @@ describe('PushApi', function () {
   var channelToken = 'fake-channel-token';
 
   describe('after established connection', function () {
-     var httpBackend;
-     var callback1, callback2, callback3;
+    var httpBackend;
+    var callback1, callback2, callback3;
 
-     beforeEach(function () {
-       module(function (pushApiProvider) {
-         pushApiProvider
-                 .keepAliveTimeInterval(5)
-                 .backendServiceUrl("/pushService");
-       });
+    beforeEach(function () {
+      module(function (pushApiProvider) {
+        pushApiProvider
+          .keepAliveTimeInterval(5)
+          .backendServiceUrl("/pushService");
+      });
 
-       inject(function (_pushApi_, $httpBackend) {
-         pushApi = _pushApi_;
-         httpBackend = $httpBackend;
+      inject(function (_pushApi_, $httpBackend) {
+        pushApi = _pushApi_;
+        httpBackend = $httpBackend;
 
-         httpBackend.expectGET('/pushService?subscriber=subscriber1').respond(200, "token1");
-         pushApi.openConnection("subscriber1");
-         httpBackend.flush();
+        httpBackend.expectGET('/pushService?subscriber=subscriber1').respond(200, "token1");
+        pushApi.openConnection("subscriber1");
+        httpBackend.flush();
 
-         callback1 = jasmine.createSpy('callback1');
-         callback2 = jasmine.createSpy('callback2');
-         callback3 = jasmine.createSpy('callback3');
+        callback1 = jasmine.createSpy('callback1');
+        callback2 = jasmine.createSpy('callback2');
+        callback3 = jasmine.createSpy('callback3');
 
-         socket = goog.appengine.Socket._get("token1");
-       });
-     });
+        socket = goog.appengine.Socket._get("token1");
+      });
+    });
 
-     afterEach(function () {
-        httpBackend.verifyNoOutstandingExpectation();
-        httpBackend.verifyNoOutstandingRequest();
-     });
+    afterEach(function () {
+      httpBackend.verifyNoOutstandingExpectation();
+      httpBackend.verifyNoOutstandingRequest();
+    });
 
 
     it('subscribes for event and receive message for it', function () {
@@ -52,9 +52,9 @@ describe('PushApi', function () {
       pushApi.bind(eventName, callback);
       httpBackend.flush();
 
-      socket.onmessage({data: angular.toJson({event: eventName})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName}})});
 
-      expect(callback).toHaveBeenCalledWith({event: eventName});
+      expect(callback).toHaveBeenCalledWith({key: eventName});
     });
 
 
@@ -69,8 +69,8 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
+      var messageData = {key: eventName};
+      socket.onmessage({data: angular.toJson({event: messageData})});
 
       expect(callback1).toHaveBeenCalledWith(messageData);
       expect(callback2).toHaveBeenCalledWith(messageData);
@@ -92,9 +92,10 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName}, correlationId: correlationIdA})});
 
-      expect(callback1).toHaveBeenCalledWith({event: eventName + correlationIdA});
+
+      expect(callback1).toHaveBeenCalledWith({key: eventName});
       expect(callback2).not.toHaveBeenCalled();
     });
 
@@ -108,9 +109,9 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      socket.onmessage({data: angular.toJson({event: eventName})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName}})});
 
-      expect(callback1).toHaveBeenCalledWith({event: eventName});
+      expect(callback1).toHaveBeenCalledWith({key: eventName});
     });
 
 
@@ -128,8 +129,8 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
+      var messageData = {key: eventName};
+      socket.onmessage({data: angular.toJson({event: messageData})});
 
       expect(callback1).not.toHaveBeenCalled();
       expect(callback2).toHaveBeenCalledWith(messageData);
@@ -147,8 +148,8 @@ describe('PushApi', function () {
 
       pushApi.unbind('non-existing-event', boundCallback);
 
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
+      var messageData = {key: eventName};
+      socket.onmessage({data: angular.toJson({event: messageData})});
 
       expect(callback1).toHaveBeenCalled();
     });
@@ -167,8 +168,8 @@ describe('PushApi', function () {
       pushApi.unbind(eventName, boundCallback2);
 
       httpBackend.flush();
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
+      var messageData = {key: eventName};
+      socket.onmessage({data: angular.toJson( {event: messageData})});
 
       expect(callback1).toHaveBeenCalled();
     });
@@ -189,8 +190,8 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      var messageData = {event: eventName};
-      socket.onmessage({data: angular.toJson(messageData)});
+      var messageData = {key: eventName};
+      socket.onmessage({data: angular.toJson( {event: messageData})});
 
       expect(callback1).not.toHaveBeenCalled();
       expect(callback2).not.toHaveBeenCalled();
@@ -217,8 +218,9 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      socket.onmessage({data: angular.toJson({event: eventName + correlationIdB})});
-      socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
+
+      socket.onmessage({data: angular.toJson({event: {key: eventName }, correlationId : correlationIdB})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName }, correlationId : correlationIdA})});
 
       expect(callback1).not.toHaveBeenCalled();
       expect(callback2).toHaveBeenCalled();
@@ -242,8 +244,8 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      socket.onmessage({data: angular.toJson({event: eventName})});
-      socket.onmessage({data: angular.toJson({event: eventName + correlationIdA})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName }})});
+      socket.onmessage({data: angular.toJson({event: {key: eventName }, correlationId : correlationIdA})});
 
       expect(callback1).not.toHaveBeenCalled();
       expect(callback2).toHaveBeenCalled();
@@ -315,7 +317,7 @@ describe('PushApi', function () {
 
       httpBackend.flush();
 
-      expect(callback1).toHaveBeenCalledWith({data: 'dummy', event: manualEvent});
+      expect(callback1).toHaveBeenCalledWith({data: 'dummy', key: manualEvent});
     });
 
 
@@ -328,7 +330,6 @@ describe('PushApi', function () {
 
       httpBackend.verifyNoOutstandingRequest();
     });
-
 
 
     describe('bulk bindings', function () {
@@ -348,18 +349,18 @@ describe('PushApi', function () {
 
       it('binds callback only after flushing bulk', function () {
         var eventName = 'fake-event';
-        var messageData = {event: eventName};
+        var messageData = {key: eventName};
 
         pushApi.bulkBind(eventName, callback1);
 
-        socket.onmessage({data: angular.toJson(messageData)});
+        socket.onmessage({data: angular.toJson({event: messageData})});
         expect(callback1).not.toHaveBeenCalled();
 
         expectBulkBindCall([eventName]);
         pushApi.flushBulkBind();
         httpBackend.flush();
 
-        socket.onmessage({data: angular.toJson(messageData)});
+        socket.onmessage({data: angular.toJson({event: messageData})});
         expect(callback1).toHaveBeenCalledWith(messageData);
       });
 
@@ -426,18 +427,18 @@ describe('PushApi', function () {
 
       it('binds callback only after flushing initials', function () {
         var eventName = 'fake-event';
-        var messageData = {event: eventName};
+        var messageData = {key: eventName};
 
         pushApi.initialBind(eventName, callback1);
 
-        socket.onmessage({data: angular.toJson(messageData)});
+        socket.onmessage({data: angular.toJson({event: messageData})});
         expect(callback1).not.toHaveBeenCalled();
 
         expectBulkBindCall([eventName]);
         $timeout.flush(1);
         httpBackend.flush();
 
-        socket.onmessage({data: angular.toJson(messageData)});
+        socket.onmessage({data: angular.toJson({event: messageData})});
         expect(callback1).toHaveBeenCalledWith(messageData);
       });
 
@@ -477,9 +478,9 @@ describe('PushApi', function () {
         $timeout.flush(1);
         httpBackend.flush();
 
-        socket.onmessage({data: angular.toJson({event: eventName})});
+        socket.onmessage({data: angular.toJson({event:{key: eventName}})});
 
-        expect(callback3).toHaveBeenCalledWith({event: eventName});
+        expect(callback3).toHaveBeenCalledWith({key: eventName});
       }));
 
       it('does not mix with regular bindings', function () {
@@ -533,9 +534,9 @@ describe('PushApi', function () {
       }
     }
 
-   });
+  });
 
-  describe('Connection', function() {
+  describe('Connection', function () {
     var $interval, $timeout, httpBackend;
     var keepAliveInterval = 5; //in seconds
     var reconnectInterval = 20; //in seconds
@@ -543,9 +544,9 @@ describe('PushApi', function () {
     beforeEach(function () {
       module(function (pushApiProvider) {
         pushApiProvider
-                .keepAliveTimeInterval(keepAliveInterval)
-                .reconnectTimeInterval(reconnectInterval)
-                .backendServiceUrl("/pushService");
+          .keepAliveTimeInterval(keepAliveInterval)
+          .reconnectTimeInterval(reconnectInterval)
+          .backendServiceUrl("/pushService");
       });
 
       inject(function (_pushApi_, $httpBackend, _$interval_, _$timeout_) {
@@ -672,8 +673,6 @@ describe('PushApi', function () {
     });
 
   });
-
-
 
 
 });

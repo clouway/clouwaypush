@@ -1,20 +1,14 @@
 package com.clouway.push.server.testevents;
 
-import com.clouway.push.shared.PushEvent;
+import com.clouway.push.server.PushEvent;
 
 /**
  * @author Miroslav Genov (miroslav.genov@clouway.com)
  */
-public class GenericJsonEvent extends PushEvent<GenericJsonEventHandler> {
-  private static final Type<GenericJsonEventHandler> TYPE = new Type<GenericJsonEventHandler>("genericJsonEvent");
+public class GenericJsonEvent extends PushEvent {
 
-  @Override
-  public Type<GenericJsonEventHandler> getAssociatedType() {
-    return TYPE;
+  public GenericJsonEvent() {
+    super("genericJsonEvent");
   }
 
-  @Override
-  public void dispatch(GenericJsonEventHandler handler) {
-    handler.onGenericJsonEvent(this);
-  }
 }

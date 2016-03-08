@@ -1,7 +1,5 @@
 package com.clouway.push.server;
 
-import com.clouway.push.client.channelapi.PushChannelService;
-import com.clouway.push.shared.PushEvent;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -13,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -57,12 +54,12 @@ public class PushChannelRestService extends HttpServlet {
       return;
     }
 
-    List<PushEvent.Type> eventTypes = Lists.newArrayList();
+    List<String> keys = Lists.newArrayList();
     for (String eventName : eventNames) {
-      eventTypes.add(new PushEvent.Type(eventName));
+      keys.add(eventName);
     }
 
-    pushChannelService.subscribe(subscriber, eventTypes);
+    pushChannelService.subscribe(subscriber, keys);
   }
 
   @Override
@@ -71,6 +68,8 @@ public class PushChannelRestService extends HttpServlet {
     String eventName = req.getParameter("eventName");
     String correlationId = req.getParameter("correlationId");
 
-    pushChannelService.unsubscribe(subscriber, new PushEvent.Type(eventName, Strings.nullToEmpty(correlationId)));
+    String key = eventName + Strings.nullToEmpty(correlationId);
+
+    pushChannelService.unsubscribe(subscriber, key);
   }
 }
