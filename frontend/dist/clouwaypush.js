@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2016-03-08
+ * clouwaypush - 2016-07-11
  *
  * Copyright (c) 2016 clouWay ltd
  */
@@ -455,6 +455,45 @@ angular.module('clouway-push', [])
             .backendServiceUrl(backendServiceUrl)
             .keepAliveTimeInterval(keepAliveInterval)
             .reconnectTimeInterval(reconnectInterval);
+  }])
+
+
+  /**
+   * @ngdoc directive
+   * @name pushHandler
+   * @restrict E
+   * 
+   * @description
+   * Binds push event handler and takes care of unbinding it when the directive is destroyed.
+   *
+   * @example
+   * As element:
+   * <push-handler event="MyPushEvent" correlation-id="vm.eventId" on-event="vm.handleEvent(data)"></push-handler>
+   *
+   * 
+   * @param {''} event - name of push event to bind handler to.
+   * @param {String} [correlationId] - correlationId for push event.
+   * @param {function(data)} onEvent - handler method to bind to push event.
+   */
+  .directive('pushHandler', ["$parse", "pushApi", function ($parse, pushApi) {
+    return {
+      restrict: 'E',
+      link: function (scope, elem, attrs) {
+        var eventName = attrs.event;
+        var correlationId = $parse(attrs.correlationId)(scope);
+        var onPushEvent = $parse(attrs.onEvent);
+
+        elem.remove();
+
+        var handler = pushApi.bindId(eventName, correlationId, function (eventData) {
+          onPushEvent(scope, {$event: eventData});
+        });
+
+        scope.$on('$destroy', function () {
+          pushApi.unbindId(eventName, correlationId, handler);
+        });
+      }
+    };
   }])
 
 ;
