@@ -3,10 +3,10 @@
   "version": "1.0",
   "license": "MIT",
   "devDependencies": {
-    "angular-mocks": "~1.4.6",
-    "appengine-channel-api-stub": "~1.0.1"
+    "angular-mocks": "~1.4.6"
   },
   "dependencies": {
-    "angular": "~1.4.6"
+    "angular": "~1.4.6",
+    "firebase": "^4.3.0"
   }
 }

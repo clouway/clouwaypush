@@ -29,8 +29,7 @@ module.exports = {
    */
   test_files: {
     js: [
-      'vendor/angular-mocks/angular-mocks.js',
-      'vendor/appengine-channel-api-stub/dist/channel-api-stub.js'
+      'vendor/angular-mocks/angular-mocks.js'
     ]
   },
 
@@ -47,7 +46,8 @@ module.exports = {
    */
   vendor_files: {
     js: [
-      'vendor/angular/angular.js'
+      'vendor/angular/angular.js',
+      'vendor/firebase/firebase.js'
     ]
   }
 };

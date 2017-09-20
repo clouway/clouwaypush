@@ -5,15 +5,8 @@ angular.module('clouway-push', [])
 
   .provider('pushApi', function () {
 
-    this.subscriberLength = 15;
-
     this.endpoints = {
       serviceUrl: ""
-    };
-
-    this.timeIntervals = {
-      keepAlive: 60,
-      channelReconnect: 5
     };
 
     /**
@@ -22,76 +15,33 @@ angular.module('clouway-push', [])
      * @param url the new url
      * @returns {*} the provider instance for chaining purposes.
      */
-    this.backendServiceUrl = function(url) {
+    this.backendServiceUrl = function (url) {
       this.endpoints.serviceUrl = url;
       return this;
     };
 
-
-    /**
-     * Set a time interval for sending a keepAlive.
-     *
-     * @param {number} seconds time in seconds between each keepAlive.
-     * @returns {*} the provider instance for chaining purposes.
-     */
-    this.keepAliveTimeInterval = function (seconds) {
-      this.timeIntervals.keepAlive = seconds;
-      return this;
-    };
-
-    /**
-     * Set a time interval for attempting a reconnect.
-     *
-     * @param {number} seconds time in seconds between each reconnect attempt.
-     * @returns {*} the provider instance for chaining purposes.
-     */
-    this.reconnectTimeInterval = function (seconds) {
-      this.timeIntervals.channelReconnect = seconds;
-      return this;
-    };
-
-    this.$get = function ($rootScope, $interval, $timeout, $window, $http) {
-      var subscriberLength = this.subscriberLength;
-      var timeIntervals = this.timeIntervals;
+    this.$get = function ($rootScope, $timeout, $http, $q) {
       var endpoints = this.endpoints;
       var boundEvents = {};
       var pendingBulkBindings = [];
       var pendingInitialBindings = [];
-      var channelSubscriber;
-      var keepAliveInterval;
 
       var initialFlushTimeout;
 
       var service = {};
-
-      /**
-       * Generate a random alpha-numeric subscriber.
-       *
-       * @returns {string} the generated subscriber.
-       */
-      var generateSubscriber = function (length) {
-        var symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456';
-        var generated = [];
-        var i = 0;
-
-        while (i < length) {
-          i++;
-          var character = Math.floor(Math.random() * symbols.length);
-          generated.push(symbols.charAt(character));
-        }
-
-        return generated.join('');
-      };
+      var firebaseDatabaseRef = {};
+      var namespace = '';
 
       /**
        * Handle push event message.
        *
-       * @param {Object} message
+       * @param {String} message
        */
       var onMessage = function (message) {
-        var eventSource = angular.fromJson(message.data);
+        var eventSource = angular.fromJson(message);
         var event = eventSource.event;
-        var bindingKey =  [event.key, eventSource.correlationId].join("");
+        var bindingKey = [event.key, eventSource.correlationId].join("");
+
         var handlers = boundEvents[bindingKey];
 
         angular.forEach(handlers, function (handler) {
@@ -102,92 +52,65 @@ angular.module('clouway-push', [])
       /**
        * Open channel using specified channel token.
        *
-       * @param {String} channelToken the token to use for opening channel.
+       * @param {Object} data the data from server to use for opening channel.
        */
-      var openChannel = function (channelToken) {
-        var channel = new goog.appengine.Channel(channelToken);
-        var socket = channel.open();
-
-        socket.onmessage = onMessage;
-
-        socket.onerror = function (errorMessage) {
-          establishConnection();
-        };
+      var openChannel = function (data) {
+        return firebase.auth().signInWithCustomToken(data.token).then(function () {
+          namespace = data.namespace;
+        });
       };
 
       var subscribeForEvents = function (events) {
-        var subscriber = service.openConnection();
-        var params = {
-          subscriber: subscriber,
-          eventName: events
-        };
-
         // Used for testing purposes only.
         if (!endpoints.serviceUrl || endpoints.serviceUrl === '') {
           return;
         }
 
         if (events.length) {
-          $http.put(endpoints.serviceUrl, '', {params: params}).then(function (data) {
+          service.openConnection().then(function () {
+            firebaseDatabaseRef = firebase.database().ref(namespace);
 
+            angular.forEach(events, function (event) {
+              var fbDbChildRef = firebaseDatabaseRef.child(event.eventName);
+              var isInitialBind = true;
+
+              //to skip initial binding of added child
+              fbDbChildRef.once('value', function () {
+                isInitialBind = false;
+              });
+
+              fbDbChildRef.on('child_added', function (result) {
+                if (!isInitialBind) {
+                  onMessage(result.val());
+                }
+              });
+
+              fbDbChildRef.on('child_changed', function (result) {
+                onMessage(result.val());
+              });
+            });
           });
         }
       };
 
-      var unsubscribeFromEvent = function (eventName, correlationId) {
-        var params = {subscriber: channelSubscriber, eventName: eventName, correlationId: correlationId};
-
+      var unsubscribeFromEvent = function (eventName) {
         // Used for testing purposes only.
         if (!endpoints.serviceUrl || endpoints.serviceUrl === '') {
           return;
         }
-        $http['delete'](endpoints.serviceUrl, {params: params}).then(function(data) {
 
-        });
-      };
-
-      var keepAlive = function () {
-        var params = {subscriber: channelSubscriber};
-        $http.post(endpoints.serviceUrl, '', {params: params}).then(function(data) {
-
-        });
+        firebaseDatabaseRef.child(eventName).off();
       };
 
 
-      var establishConnection = function () {
-        var params = {subscriber: channelSubscriber};
-        $http.get(endpoints.serviceUrl, {params: params}).then(function (response) {
-          openChannel(response.data);
-
-          if (!keepAliveInterval) { // Create only if there is no existing interval set.
-            keepAliveInterval = $interval(keepAlive, timeIntervals.keepAlive * 1000);
-          }
-
-        }, function () {
-          // Retry connection after time interval.
-          $timeout(establishConnection, timeIntervals.channelReconnect * 1000, true);
-        });
-      };
-
-
-      /**
-       * Open connection for the specified subscriber.
-       *
-       * @param {String} subscriber subscriber to open connection for.
-       */
-      service.openConnection = function (subscriber) {
-        if (channelSubscriber) {
-          return channelSubscriber;
+      service.openConnection = function () {
+        if (namespace) {
+          return $q.resolve();
         }
 
-        if (!subscriber) {
-          subscriber = generateSubscriber(subscriberLength);
-        }
-
-        channelSubscriber = subscriber;
-        establishConnection(subscriber);
-
-        return subscriber;
+        return $http.get(endpoints.serviceUrl).then(function (response) {
+          return openChannel(response.data);
+        });
       };
 
       /**
@@ -201,7 +124,7 @@ angular.module('clouway-push', [])
       service.fireSpecificEvent = function (eventKey, correlationId, data) {
         var event = angular.extend({key: eventKey}, data);
         var eventSource = {correlationId: correlationId, event: event};
-        onMessage({data: eventSource});
+        onMessage(eventSource);
       };
 
       /**
@@ -389,7 +312,7 @@ angular.module('clouway-push', [])
        * @param {Function} handler handler to be called when the event occurs
        * @returns {Function} the bound handler
        */
-      function addPendingBinding (pendingBindings, eventName, correlationId, handler) {
+      function addPendingBinding(pendingBindings, eventName, correlationId, handler) {
         if (!correlationId) {
           correlationId = '';
         }
@@ -400,7 +323,7 @@ angular.module('clouway-push', [])
           $rootScope.$apply();
         };
 
-        pendingBindings.push({eventKey: eventKey, handler: eventHandler});
+        pendingBindings.push({eventKey: eventKey, eventName: eventName, handler: eventHandler});
 
         return eventHandler;
       }
@@ -410,7 +333,7 @@ angular.module('clouway-push', [])
        *
        * @param {Array} pendingBindings the list of pending bindings to flush.
        */
-      function flushPendingBindings (pendingBindings) {
+      function flushPendingBindings(pendingBindings) {
         // Do nothing if bindings list is empty
         if (!pendingBindings.length) {
           return;
@@ -424,7 +347,7 @@ angular.module('clouway-push', [])
             boundEvents[eventKey] = [];
 
             // Only add events that haven't been subscribed for
-            uniqueEventsList.push(eventKey);
+            uniqueEventsList.push({eventKey: eventKey, eventName: each.eventName});
           }
           // Add handler binding
           boundEvents[eventKey].push(each.handler);
@@ -440,14 +363,10 @@ angular.module('clouway-push', [])
   })
 
   .config(function (pushApiProvider) {
-    var backendServiceUrl = '/pushService';
-    var keepAliveInterval = 30; //in seconds
-    var reconnectInterval = 10; //in seconds
+    var backendServiceUrl = '/pushService/credentials';
 
     pushApiProvider
-            .backendServiceUrl(backendServiceUrl)
-            .keepAliveTimeInterval(keepAliveInterval)
-            .reconnectTimeInterval(reconnectInterval);
+      .backendServiceUrl(backendServiceUrl);
   })
 
 
@@ -455,7 +374,7 @@ angular.module('clouway-push', [])
    * @ngdoc directive
    * @name pushHandler
    * @restrict E
-   * 
+   *
    * @description
    * Binds push event handler and takes care of unbinding it when the directive is destroyed.
    *
@@ -463,7 +382,7 @@ angular.module('clouway-push', [])
    * As element:
    * <push-handler event="MyPushEvent" correlation-id="vm.eventId" on-event="vm.handleEvent(data)"></push-handler>
    *
-   * 
+   *
    * @param {''} event - name of push event to bind handler to.
    * @param {String} [correlationId] - correlationId for push event.
    * @param {function(data)} onEvent - handler method to bind to push event.

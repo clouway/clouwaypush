@@ -1,0 +1,35 @@
+buildscript {
+  ext.gae_version = '1.9.54'
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "com.google.appengine:gradle-appengine-plugin:$gae_version"
+  }
+}
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+
+repositories {
+  mavenCentral()
+}
+
+version = '3.0'
+
+dependencies {
+  compile ("com.google.appengine:appengine-api-1.0-sdk:$gae_version")
+
+  compile ('com.google.api-client:google-api-client-appengine:1.22.0'){
+    exclude module:'google-api-client-servlet'
+  }
+  compile 'javax.servlet:javax.servlet-api:3.1.0'
+  compile 'com.google.code.gson:gson:2.7'
+
+  compile 'io.jsonwebtoken:jjwt:0.6.0'
+
+  testCompile 'junit:junit:4.11', 'org.jmock:jmock:2.6.0', 'org.jmock:jmock-junit4:2.8.2'
+  testCompile "com.google.appengine:appengine-testing:$gae_version"
+}
