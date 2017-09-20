@@ -1,0 +1,40 @@
+@startuml
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+skinparam maxmessagesize 60
+skinparam sequenceParticipant underline
+
+participant "Client" as A
+participant "Server" as B
+participant "Firebase" as C
+
+[-> A: initialize
+activate A
+A -> B: GET(/pushService)
+activate A
+activate B
+B -> A: namespace,customToken
+deactivate A
+deactivate B
+A -> C: listen_for_events(firebase.database().ref(namespace).child(eventName))
+activate A
+activate C
+B -> C: pushEvent(eventName) PUT(firebaseUrl/namespace/eventName)
+deactivate B
+C -> A: sync
+deactivate A
+deactivate C
+note left of A #red
+Cleaning up the
+push event bindings
+when the page is
+changed
+($scope is destroyed).
+end note
+[-> A: unbind(eventName)
+A -> C: disconnect(ref().child(eventName).off())
+deactivate B
+deactivate A
+deactivate C
+
+@enduml
