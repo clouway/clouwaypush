@@ -6,7 +6,7 @@
 
 Clouway Push library is used server to send updates to the clients.
 
-##Usage
+## Usage
 ### Setup
 Include the firebase web init snippet setup in your app
 ``` in index.html

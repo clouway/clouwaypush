@@ -52,8 +52,8 @@ public class FirebaseTokenGenerator implements TokenGenerator {
               .claim("iat", timeSeconds)
               .claim("exp", expSeconds)
               .claim("aud", IDENTITY_ENDPOINT)
-              .claim("iss", "firebase-adminsdk-9mfr3@clouwaytestapp.iam.gserviceaccount.com")
-              .claim("sub", "firebase-adminsdk-9mfr3@clouwaytestapp.iam.gserviceaccount.com")
+              .claim("iss", googleCredential.getServiceAccountId())
+              .claim("sub", googleCredential.getServiceAccountId())
               .signWith(SignatureAlgorithm.RS256, googleCredential.getServiceAccountPrivateKey())
               .compact();
     }
