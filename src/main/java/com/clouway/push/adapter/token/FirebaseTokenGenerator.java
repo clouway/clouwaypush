@@ -74,7 +74,7 @@ public class FirebaseTokenGenerator implements TokenGenerator {
 
       String accessToken = credentials.getAccessToken();
 
-      return new AccessToken(accessToken, credentials.getExpirationTimeMilliseconds());
+      return new AccessToken(accessToken, credentials.getExpiresInSeconds());
     }
     return new AccessToken("", null);
   }
