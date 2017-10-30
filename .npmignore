@@ -1,0 +1,9 @@
+pom.xml
+src
+.travis.yml
+build.gradle
+.gitignore
+.npmignore
+frontend/*
+!frontend/dist
+!frontend/README.md
