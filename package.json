@@ -1,0 +1,19 @@
+{
+  "author": "clouWay ltd",
+  "name": "clouwaypush",
+  "version": "0.1.0",
+  "homepage": "https://github.com/clouway/clouwaypush",
+  "licenses": {
+    "type": "MIT"
+  },
+  "bugs": "https://github.com/clouway/clouwaypush/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:clouway/clouwaypush.git"
+  },
+  "main": "frontend/dist/clouwaypush.js",
+  "dependencies": {},
+  "peerDependencies": {
+    "angular": ">=1.4.x"
+  }
+}
