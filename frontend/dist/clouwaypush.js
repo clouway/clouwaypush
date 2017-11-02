@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2017-10-26
+ * clouwaypush - 2017-11-02
  *
  * Copyright (c) 2017 clouWay ltd
  */
@@ -370,7 +370,7 @@ angular.module('clouway-push', [])
   })
 
   .config(["pushApiProvider", function (pushApiProvider) {
-    var backendServiceUrl = '/pushService/credentials';
+    var backendServiceUrl = '/v1/pushService/token';
 
     pushApiProvider
       .backendServiceUrl(backendServiceUrl);

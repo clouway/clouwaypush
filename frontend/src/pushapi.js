@@ -363,7 +363,7 @@ angular.module('clouway-push', [])
   })
 
   .config(function (pushApiProvider) {
-    var backendServiceUrl = '/pushService/credentials';
+    var backendServiceUrl = '/v1/pushService/token';
 
     pushApiProvider
       .backendServiceUrl(backendServiceUrl);
