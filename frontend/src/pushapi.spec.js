@@ -77,14 +77,14 @@ describe('PushApi', function () {
     beforeEach(function () {
       module(function (pushApiProvider) {
         pushApiProvider
-          .backendServiceUrl("/pushService/credentials");
+          .backendServiceUrl("/v1/pushService/token");
       });
 
       inject(function (_pushApi_, $httpBackend) {
         pushApi = _pushApi_;
         httpBackend = $httpBackend;
 
-        httpBackend.expectGET('/pushService/credentials').respond(200, {token: "token1", namespace: 'namespace'});
+        httpBackend.expectGET('/v1/pushService/token').respond(200, {token: "token1", namespace: 'namespace'});
         pushApi.openConnection();
 
         callback1 = jasmine.createSpy('callback1');
@@ -617,7 +617,7 @@ describe('PushApi', function () {
     });
 
     function expectBindCall() {
-      httpBackend.expectGET('/pushService/credentials').respond(200, {token: 'token1', namespace: 'namespace'});
+      httpBackend.expectGET('/v1/pushService/token').respond(200, {token: 'token1', namespace: 'namespace'});
     }
   });
 
@@ -627,7 +627,7 @@ describe('PushApi', function () {
     beforeEach(function () {
       module(function (pushApiProvider) {
         pushApiProvider
-          .backendServiceUrl("/pushService/credentials");
+          .backendServiceUrl("/v1/pushService/token");
       });
 
       inject(function (_pushApi_, $httpBackend) {
@@ -645,14 +645,14 @@ describe('PushApi', function () {
 
 
     it('opens new one', function () {
-      httpBackend.expectGET('/pushService/credentials').respond(200, {token: "token1", namespace: 'namespace'});
+      httpBackend.expectGET('/v1/pushService/token').respond(200, {token: "token1", namespace: 'namespace'});
       pushApi.openConnection("subscriber1");
 
       httpBackend.flush();
     });
 
     it('reuses existing connection on second open', function () {
-      httpBackend.expectGET('/pushService/credentials').respond(200, {token: 'token', namespace: 'namespace'});
+      httpBackend.expectGET('/v1/pushService/token').respond(200, {token: 'token', namespace: 'namespace'});
 
       pushApi.openConnection();
       httpBackend.flush();
