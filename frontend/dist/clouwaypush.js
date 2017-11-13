@@ -1,5 +1,5 @@
 /**
- * clouwaypush - 2017-11-02
+ * clouwaypush - 2017-11-13
  *
  * Copyright (c) 2017 clouWay ltd
  */
@@ -7,11 +7,31 @@
 
 /**
  * @author Stefan Dimitrov (stefan.dimitrov@clouway.com).
+ *
+ * setup endpoint :
+ *  .config(function (pushApiProvider) {
+ *    var backendServiceUrl = '/v1/pushService/token';
+ *
+ *    pushApiProvider
+ *      .backendServiceUrl(backendServiceUrl);
+ *  })
+ * 
+ *
  */
 angular.module('clouway-push', [])
 
   .provider('pushApi', function () {
 
+    /**
+     * Sets the token serving path
+     * setup endpoint :
+     *  .config(function (pushApiProvider) {
+     *    var backendServiceUrl = 'v1/pushService/token';
+     *
+     *    pushApiProvider
+     *      .backendServiceUrl(backendServiceUrl);
+     *  })
+     */
     this.endpoints = {
       serviceUrl: ""
     };
@@ -368,14 +388,6 @@ angular.module('clouway-push', [])
       return service;
     }];
   })
-
-  .config(["pushApiProvider", function (pushApiProvider) {
-    var backendServiceUrl = '/v1/pushService/token';
-
-    pushApiProvider
-      .backendServiceUrl(backendServiceUrl);
-  }])
-
 
   /**
    * @ngdoc directive
