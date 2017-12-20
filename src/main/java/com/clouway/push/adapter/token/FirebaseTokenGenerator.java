@@ -3,6 +3,7 @@ package com.clouway.push.adapter.token;
 import com.clouway.push.core.AccessToken;
 import com.clouway.push.core.TokenGenerator;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.common.base.Strings;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -76,20 +77,22 @@ public class FirebaseTokenGenerator implements TokenGenerator {
 
       return new AccessToken(accessToken, credentials.getExpiresInSeconds());
     }
-    return new AccessToken("", null);
+    return new AccessToken("", -1L);
   }
 
 
   private GoogleCredential getGoogleCredentials() {
     InputStream configStream;
 
-    try {
-      configStream = new ByteArrayInputStream(firebaseServiceAccount.getBytes(StandardCharsets.UTF_8.name()));
+    if (!Strings.isNullOrEmpty(firebaseServiceAccount)) {
+      try {
+        configStream = new ByteArrayInputStream(firebaseServiceAccount.getBytes(StandardCharsets.UTF_8.name()));
 
-      // Authenticate a Google credential with the service account
-      return GoogleCredential.fromStream(configStream);
-    } catch (IOException e) {
-      e.printStackTrace();
+        // Authenticate a Google credential with the service account
+        return GoogleCredential.fromStream(configStream);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
 
     return null;
