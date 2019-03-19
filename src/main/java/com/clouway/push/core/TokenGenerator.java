@@ -16,8 +16,9 @@ public interface TokenGenerator {
   /**
    * Generate custom token
    *
+   * @param userId the id of the user for whom generate custom token
    * @return generated custom token
    */
 
-  String generateCustomToken();
+  String generateCustomToken(String userId);
 }
