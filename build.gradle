@@ -1,15 +1,18 @@
 buildscript {
   ext.gae_version = '1.9.54'
+  ext.kotlin_version = '1.3.10'
   repositories {
     mavenCentral()
   }
 
   dependencies {
     classpath "com.google.appengine:gradle-appengine-plugin:$gae_version"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
 apply plugin: 'java'
+apply plugin: "kotlin"
 
 sourceCompatibility = 1.7
 
@@ -17,10 +20,11 @@ repositories {
   mavenCentral()
 }
 
-version = '3.0'
+version = '3.1'
 
 dependencies {
   compile ("com.google.appengine:appengine-api-1.0-sdk:$gae_version")
+  compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
   compile ('com.google.api-client:google-api-client-appengine:1.22.0'){
     exclude module:'google-api-client-servlet'

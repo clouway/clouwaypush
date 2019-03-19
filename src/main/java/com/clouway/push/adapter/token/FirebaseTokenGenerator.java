@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,7 +35,7 @@ public class FirebaseTokenGenerator implements TokenGenerator {
   }
 
   @Override
-  public String generateCustomToken() {
+  public String generateCustomToken(String userId) {
     GoogleCredential googleCredential = getGoogleCredentials();
     long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
     long expSeconds = timeSeconds + 60L * 60L;
@@ -48,7 +47,7 @@ public class FirebaseTokenGenerator implements TokenGenerator {
     if (googleCredential != null) {
       return Jwts.builder()
               .setHeaderParams(headers)
-              .claim("uid", UUID.randomUUID().toString())
+              .claim("uid", userId)
               .claim("iat", timeSeconds)
               .claim("exp", expSeconds)
               .claim("aud", IDENTITY_ENDPOINT)
