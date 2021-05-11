@@ -1,15 +1,24 @@
+apply plugin: 'java'
+apply plugin: 'com.bmuschko.nexus'
+apply plugin: 'net.researchgate.release'
+
 buildscript {
   ext.gae_version = '1.9.54'
   repositories {
     mavenCentral()
+    jcenter()
+    maven {
+      url 'https://plugins.gradle.org/m2/'
+    }
   }
 
   dependencies {
     classpath "com.google.appengine:gradle-appengine-plugin:$gae_version"
+    classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+    classpath 'net.researchgate:gradle-release:2.6.0'
   }
 }
 
-apply plugin: 'java'
 
 sourceCompatibility = 1.7
 
@@ -20,10 +29,10 @@ repositories {
 version = '3.0'
 
 dependencies {
-  compile ("com.google.appengine:appengine-api-1.0-sdk:$gae_version")
+  compile("com.google.appengine:appengine-api-1.0-sdk:$gae_version")
 
-  compile ('com.google.api-client:google-api-client-appengine:1.22.0'){
-    exclude module:'google-api-client-servlet'
+  compile('com.google.api-client:google-api-client-appengine:1.22.0') {
+    exclude module: 'google-api-client-servlet'
   }
   compile 'javax.servlet:javax.servlet-api:3.1.0'
   compile 'com.google.code.gson:gson:2.7'
@@ -32,4 +41,57 @@ dependencies {
 
   testCompile 'junit:junit:4.11', 'org.jmock:jmock:2.6.0', 'org.jmock:jmock-junit4:2.8.2'
   testCompile "com.google.appengine:appengine-testing:$gae_version"
+}
+
+
+version = '3.0'
+group = 'com.clouway.messaging'
+
+modifyPom {
+  project {
+    name 'clouwaypush'
+    description 'clouwaypush'
+    url 'https://github.com/clouway/clouwaypush'
+    inceptionYear '2016'
+
+    scm {
+      url 'https://github.com/clouway/clouwaypush'
+      connection 'scm:https://clouway@github.com/clouway/clouwaypush.git'
+      developerConnection 'scm:git://github.com/clouway/clouwaypush.git'
+    }
+
+    licenses {
+      license {
+        name 'The Apache Software License, Version 2.0'
+        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        distribution 'repo'
+      }
+    }
+
+    developers {
+      developer {
+        id 'telcong'
+        name 'Telcong Bot'
+        email 'telcong@clouway.com'
+      }
+    }
+  }
+}
+
+extraArchive {
+  sources = true
+  tests = false
+  javadoc = true
+}
+
+nexus {
+  sign = true
+  repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+  snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+}
+
+allprojects {
+  tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+  }
 }
